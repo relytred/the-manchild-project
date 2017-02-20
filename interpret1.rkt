@@ -25,7 +25,7 @@ Project 1
 (define statement
   (lambda (expr state)
     (cond
-      ((eq? (operator expr) 'return) (value (operand1 expr state)))
+      ((eq? (operator expr) 'return) (value (operand1 expr) state))
       ;((eq? (operator expr) 'var) (varDeclare (operand1 expr)))
       ((eq? (operator expr) '=) (setVar (value operand1) state))
       ((eq? (operator expr) 'if) (ifEval expr state))
@@ -67,12 +67,12 @@ Project 1
 
 (define ifEval
   (lambda (expr state)
-    ;(display (cdddr expr))
+    (display expr)
     (display "\n")
     (cond
       ((and (eq? (operator expr) 'if) (boolean (operand1 expr) state)) (value (operand2 expr) state));if succeeds
-      ((not (eq? (operator expr) 'if)) (statement (operator expr) state)); else
-      ((null? expr) 0)
+      ((not (eq? (operator expr) 'if)) (statement expr state)); else
+      ((null? cdddr(expr)) 0)
       (else (ifEval (cadddr expr) state))
     )))
 
