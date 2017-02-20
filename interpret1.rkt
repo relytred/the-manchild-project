@@ -30,7 +30,6 @@ Project 1
       ((eq? (operator expr) '+) (+ (value (operand1 expr)) (value (operand2 expr))))
       ((eq? (operator expr) '-) (- (value (operand1 expr)) (value (operand2 expr))))
       ((eq? (operator expr) '*) (* (value (operand1 expr)) (value (operand2 expr))))
-      ((eq? (operator expr) 'x) (* (value (operand1 expr)) (value (operand2 expr))))
       ((eq? (operator expr) '=) (setVar (value operand1)))
       ((eq? (operator expr) '/) (quotient (value (operand1 expr)) (value (operand2 expr))))
       ((eq? (operator expr) '%) (remainder (value (operand1 expr)) (value (operand2 expr))))
@@ -55,8 +54,8 @@ Project 1
 (define ifEval
   (lambda (expr)
     (cond
-      ((value (operand1 expr)) (operand2 expr))
-      (else (operand2 expr))
+      ((value (operand1 expr)) (value (operand2 expr)))
+      (else (value (operand2 expr)))
     )))
 
 ; A function to evaluate while loops
