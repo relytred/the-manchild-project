@@ -12,7 +12,7 @@ Project 1
 
 (define interpret
   (lambda (expr)
-    (value (car (parser expr)))
+    (statement (car (parser expr)) '(()()))
     ))
 
 
@@ -23,10 +23,28 @@ Project 1
 (define operand2 caddr)
 
 (define statement
-  (lambda (line)
+  (lambda (expr state)
     (cond
-      ((eq? (car line) 'if) #t)
-      (else #f))))
+      ((eq? (operator expr) 'return) (value (operand1 expr state)))
+      ;((eq? (operator expr) 'var) (varDeclare (operand1 expr)))
+      ((eq? (operator expr) '=) (setVar (value operand1) state))
+      ((eq? (operator expr) 'if) (ifEval expr state))
+      ((eq? (operator expr) 'while) (whileEval expr)) )))
+
+(define boolean
+  (lambda (expr state)
+    (cond
+      ((eq? (operator expr) '&&) (and (value (operand1 expr) state) (value (operand2 expr) state)))
+      ;((eq? (operator expr) '|| (or (value (operand1 expr)) (value (operand2 expr)))))
+      ((eq? (operator expr) '==) (eq? (value (operand1 expr) state) (value (operand2 expr) state)))
+      ((eq? (operator expr) '!=) (not (eq? (value (operand1 expr) state) (value (operand2 expr) state))))
+      ((eq? (operator expr) '<=) (<= (value (operand1 expr) state) (value (operand2 expr) state)))
+      ((eq? (operator expr) '>=) (>= (value (operand1 expr) state) (value (operand2 expr) state)))
+      ((eq? (operator expr) '>) (> (value (operand1 expr) state) (value (operand2 expr) state)))
+      ((eq? (operator expr) '<) (< (value (operand1 expr) state) (value (operand2 expr) state)))
+      ((eq? (operator expr) '!) (not operand1))
+      (else (error "unknown operator:" (operator expr))) )))
+      
 
 (define value
   (lambda (expr state)
@@ -37,30 +55,25 @@ Project 1
       ((eq? (operator expr) '*) (* (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '/) (quotient (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '%) (remainder (value (operand1 expr) state) (value (operand2 expr) state)))  
-      ((eq? (operator expr) '&&) (and (value (operand1 expr) state) (value (operand2 expr) state)))
-       ;((eq? (operator expr) '|| (or (value (operand1 expr)) (value (operand2 expr)))))
-      ((eq? (operator expr) '==) (eq? (value (operand1 expr) state) (value (operand2 expr) state)))
-      ((eq? (operator expr) '!=) (not (eq? (value (operand1 expr) state) (value (operand2 expr) state))))
-      ((eq? (operator expr) '<=) (<= (value (operand1 expr) state) (value (operand2 expr) state)))
-      ((eq? (operator expr) '>=) (>= (value (operand1 expr) state) (value (operand2 expr) state)))
-      ((eq? (operator expr) '>) (> (value (operand1 expr) state) (value (operand2 expr) state)))
-      ((eq? (operator expr) '<) (< (value (operand1 expr) state) (value (operand2 expr) state)))
-      ((eq? (operator expr) '!) (not operand1))
-      ((eq? (operator expr) '=) (setVar (value operand1) state))
-      ((eq? (operator expr) 'return) (value (operand1 expr)))
+      ((eq? (operator expr) 'return) (value (operand1 expr) state))
       ;((eq? (operator expr) 'var) (varDeclare (operand1 expr)))
+      ((eq? (operator expr) '=) (setVar (value operand1) state))
       ((eq? (operator expr) 'if) (ifEval expr))
       ((eq? (operator expr) 'while) (whileEval expr))
       ;((declared? expr) (getValue expr))
-      (else (error "unknown operator:" (operator expr))) )))
+      (else (boolean expr state)) )))
 
 ; A function to evaluate the different possiblities in an if statement or if else statement
 
 (define ifEval
-  (lambda (expr)
+  (lambda (expr state)
+    ;(display (cdddr expr))
+    (display "\n")
     (cond
-      ((value (operand1 expr)) (operand2 expr))
-      (else (operand2 expr))
+      ((and (eq? (operator expr) 'if) (boolean (operand1 expr) state)) (value (operand2 expr) state));if succeeds
+      ((not (eq? (operator expr) 'if)) (statement (operator expr) state)); else
+      ((null? expr) 0)
+      (else (ifEval (cadddr expr) state))
     )))
 
 ; A function to evaluate while loops
