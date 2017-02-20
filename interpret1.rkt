@@ -5,21 +5,23 @@ Project 1
 |#
 
 (load "simpleParser.scm")
-(load "lex.scm")
-;(load "control.rkt")
+(load "control.rkt")
 
+
+; A method to take in an external string file and read it into our interpreter
 
 (define interpret
   (lambda (expr)
     (value (car (parser expr)))
     ))
-    ;((eq? (car (operator expr)) 'var) (setVar (operator expr)))
-    ;((eq? (
 
+
+; Defining our operators to get operands and operators
 
 (define operator car)
 (define operand1 cadr)
 (define operand2 caddr)
+
 
 (define value
   (lambda (expr)
@@ -48,6 +50,8 @@ Project 1
       ;((declared? expr) (getValue expr))
       (else (error "unknown operator:" (operator expr))) )))
 
+; A function to evaluate the different possiblities in an if statement or if else statement
+
 (define ifEval
   (lambda (expr)
     (cond
@@ -55,8 +59,10 @@ Project 1
       (else (operand2 expr))
     )))
 
+; A function to evaluate while loops
+
 (define whileEval
   (lambda (expr)
     (cond
-      (if (operand1 expr) (operand2 expr) (whileEval expr))
-    ))
+      ((operand1 expr) (operand2 expr) (whileEval expr))
+    )))
