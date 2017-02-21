@@ -17,9 +17,11 @@ Project 1
 
 (define runTree
   (lambda (expr state)
+    (display expr)
+    (display "\n")
     (cond
-      ((eq? (car expr) 'return) (value (cadar expr) state))
-      ((eq? (caar expr) 'return) (value (cadar expr) state))
+      ((eq? (car expr) 'return)  (returnHelp expr state));(value (cadar expr) state))
+      ((eq? (caar expr) 'return) (returnHelp expr state));(value (cadar expr) state))
       (else (runTree (cdr expr) (statement (car expr) state))) )))
 
 ; Helper methods to determine which element is an operator or an operand in the statemnt
@@ -44,6 +46,8 @@ Project 1
 (define boolean
   (lambda (expr state)
     (cond
+      ((and (not (list? expr)) (eq? expr 'true)) #t)
+      ((and (not (list? expr)) (eq? expr 'false)) #f)
       ((eq? (operator expr) '&&) (and (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '||) (or (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '==) (eq? (value (operand1 expr) state) (value (operand2 expr) state)))
@@ -53,6 +57,7 @@ Project 1
       ((eq? (operator expr) '>) (> (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '<) (< (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '!) (not operand1))
+      
       (else (error "unknown operator:" (operator expr))) )))
       
 ; A method to compute the value for all integer computations
@@ -61,6 +66,8 @@ Project 1
   (lambda (expr state)
     (cond
       ((number? expr) (inexact->exact expr))    ; the base case is just returns the value if it's a number
+      ((and (not (list? expr)) (eq? expr 'true)) #t)
+      ((and (not (list? expr)) (eq? expr 'false)) #f)
       ((not (list? expr)) (getValue expr state)) ;second base case where getting variable value
       ((eq? (operator expr) '+) (+ (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '-) (subEval expr state))
@@ -74,6 +81,17 @@ Project 1
       (else (boolean expr state))
       )))
 
+; A function assist in returning values, specifically turning #t -> true and #f -> false
+;(value (cadar expr) state)
+
+(define returnHelp
+  (lambda (expr state)
+    ;(display (value (cadar expr) state))
+    (cond
+      ((eq? (value (cadar expr) state) #t) 'true)
+      ((eq? (value (cadar expr) state) #f) 'false)
+      (else (value (cadar expr) state))
+      )))
 
 ; A function to evaluate the - symbol works as a negative sign and as an operator
 
@@ -101,3 +119,7 @@ Project 1
       ((boolean (operand1 expr)) (value (operand2 expr) state))
       ((boolean (operand1 expr)) (whileEval expr state))
     ))
+
+; A function defining true as #t and false as #f
+;(define 'true #t)
+;(define 'false #f)
