@@ -91,7 +91,7 @@ Project 1
     (cond
       ((and (eq? (operator expr) 'if) (boolean (operand1 expr) state)) (statement (operand2 expr) state));if succeeds
       ((not (eq? (operator expr) 'if)) (statement expr state)); else
-      ((null? (cdddr expr)) 0); last if fails no else
+      ((null? (cdddr expr)) state); last if fails no else
       (else (ifEval (cadddr expr) state)); else if
     )))
 
