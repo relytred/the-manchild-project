@@ -12,27 +12,29 @@ Project 1
 
 (define interpret
   (lambda (expr)
-    (statement (parser expr) '(()()))
+    (runTree (parser expr) '(()()))
     ))
 
-; Defining our tree parsing for statments
-(define type caar)
-(define expr1 cadar)
-(define expr2 caddar)
-
-(define statement
+(define runTree
   (lambda (expr state)
     (cond
-      ((eq? (type expr) 'return) (value (expr1 expr) state))
-      ((and (eq? (type expr) 'var) (null? (cddar expr))) (statement (cdr expr) (declareVariable (expr1 expr) state))) 
-      ((eq? (type expr) 'var) (statement (cdr expr) (assignVariable (expr1 expr) (value (expr2 expr) state) state)))
-      ((eq? (type expr) '=) (statement (cdr expr) (assignVariable (expr1 expr) (value (expr2 expr) state) state)))
-      ((eq? (type expr) 'if) (statement (cdr expr) (ifEval expr state)))
-      ((eq? (type expr) 'while) (whileEval expr)) )))
+      ((eq? (caar expr) 'return) (value (cadar expr) state))
+      (else (runTree (cdr expr) (statement (car expr) state))) )))
 
 (define operator car)
 (define operand1 cadr)
 (define operand2 caddr)
+
+(define statement
+  (lambda (expr state)
+    (cond
+      ;((eq? (type expr) 'return) (value (expr1 expr) state))
+      ((and (eq? (operator expr) 'var) (null? (cddr expr))) (declareVariable (operand1 expr) state))
+      ((eq? (operator expr) 'var) (assignVariable (operand1 expr) (value (operand2 expr) state) state))
+      ((eq? (operator expr) '=) (assignVariable (operand1 expr) (value (operand2 expr) state) state))
+      ((eq? (operator expr) 'if) (ifEval expr state))
+      ((eq? (operator expr) 'while) (whileEval expr)) )))
+
 
 (define boolean
   (lambda (expr state)
