@@ -20,6 +20,8 @@ Project 1
 (define expr1 cadar)
 (define expr2 caddar)
 
+; A method that facilitates the action in the parsed document
+
 (define statement
   (lambda (expr state)
     (cond
@@ -29,9 +31,13 @@ Project 1
       ((eq? (type expr) 'if) (statement (cdr expr) (ifEval expr state)))
       ((eq? (type expr) 'while) (whileEval expr)) )))
 
+; Helper methods to determine which element is an operator or an operand in the statemnt
+
 (define operator car)
 (define operand1 cadr)
 (define operand2 caddr)
+
+; A method to evaluate all of the boolean operations and update their states
 
 (define boolean
   (lambda (expr state)
@@ -47,6 +53,7 @@ Project 1
       ((eq? (operator expr) '!) (not operand1))
       (else (error "unknown operator:" (operator expr))) )))
       
+; A method to compute the value for all integer computations
 
 (define value
   (lambda (expr state)
