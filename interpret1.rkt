@@ -21,6 +21,8 @@ Project 1
       ((eq? (caar expr) 'return) (value (cadar expr) state))
       (else (runTree (cdr expr) (statement (car expr) state))) )))
 
+; Helper methods to determine which element is an operator or an operand in the statemnt
+
 (define operator car)
 (define operand1 cadr)
 (define operand2 caddr)
@@ -35,6 +37,7 @@ Project 1
       ((eq? (operator expr) 'if) (ifEval expr state))
       ((eq? (operator expr) 'while) (whileEval expr)) )))
 
+; A method to evaluate all of the boolean operations and update their states
 
 (define boolean
   (lambda (expr state)
@@ -50,6 +53,7 @@ Project 1
       ((eq? (operator expr) '!) (not operand1))
       (else (error "unknown operator:" (operator expr))) )))
       
+; A method to compute the value for all integer computations
 
 (define value
   (lambda (expr state)
@@ -57,7 +61,7 @@ Project 1
       ((number? expr) (inexact->exact expr))    ; the base case is just returns the value if it's a number
       ((not (list? expr)) (getValue expr state)) ;second base case where getting variable value
       ((eq? (operator expr) '+) (+ (value (operand1 expr) state) (value (operand2 expr) state)))
-      ((eq? (operator expr) '-) (- (value (operand1 expr) state) (value (operand2 expr) state)))
+      ((eq? (operator expr) '-) (subEval expr state))
       ((eq? (operator expr) '*) (* (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '/) (quotient (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '%) (remainder (value (operand1 expr) state) (value (operand2 expr) state)))  
@@ -65,6 +69,16 @@ Project 1
       ((eq? (operator expr) '=) (setVar (value operand1) state))
       ((eq? (operator expr) 'if) (ifEval expr))
       ((eq? (operator expr) 'while) (whileEval expr))
+      )))
+
+
+; A function to evaluate the - symbol works as a negative sign and as an operator
+
+(define subEval
+  (lambda (expr state)
+    (cond
+      ((null? (cddr expr)) (- 0 (value (operand1 expr) state)))
+      (else (- (value (operand1 expr) state) (value (operand2 expr) state)))
       )))
 
 ; A function to evaluate the different possiblities in an if statement or if else statement
@@ -81,5 +95,6 @@ Project 1
 
 (define whileEval
   (lambda (expr state)
-    #t
+      ((boolean (operand1 expr)) (value (operand2 expr) state))
+      ((boolean (operand1 expr)) (whileEval expr state))
     ))
