@@ -18,6 +18,7 @@ Project 1
 (define runTree
   (lambda (expr state)
     (cond
+      ((not (list? state)) state)
       ((eq? (caar expr) 'return) (value (cadar expr) state))
       (else (runTree (cdr expr) (statement (car expr) state))) )))
 
@@ -30,6 +31,7 @@ Project 1
 (define statement
   (lambda (expr state)
     (cond
+      ((eq? (operator expr) 'return) (value (operand1 expr) state))
       ((and (eq? (operator expr) 'var) (null? (cddr expr))) (declareVariable (operand1 expr) "null" state))
       ((eq? (operator expr) 'var) (declareVariable (operand1 expr) (value (operand2 expr) state) state))
       ((eq? (operator expr) '=) (assignVariable (operand1 expr) (value (operand2 expr) state) state))
@@ -64,10 +66,8 @@ Project 1
       ((eq? (operator expr) '*) (* (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '/) (quotient (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '%) (remainder (value (operand1 expr) state) (value (operand2 expr) state)))  
-      ((eq? (operator expr) 'return) (value (operand1 expr) state))
       ((eq? (operator expr) '=) (setVar (value operand1) state))
-      ((eq? (operator expr) 'if) (ifEval expr))
-      ((eq? (operator expr) 'while) (whileEval expr))
+      (else (boolean expr state))
       )))
 
 

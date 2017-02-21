@@ -1,1 +1,1 @@
-return (10 > 20) || (5 - 6 < 10) && true;
+var x = 10; var y = 20; if (x < y && (x % 2) == 0)   return 100; else   return 200;
