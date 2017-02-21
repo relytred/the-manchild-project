@@ -12,7 +12,7 @@ Project 1
 
 (define interpret
   (lambda (expr)
-    (statement (car (parser expr)) '(()()))
+    (statement (parser expr) '(()()))
     ))
 
 
@@ -31,7 +31,8 @@ Project 1
       ((eq? (operator expr) 'var) (declareVariable (operand1 expr) state))
       ((eq? (operator expr) '=) (assignVariable (operand1 expr) (operand2 expr) state))
       ((eq? (operator expr) 'if) (ifEval expr state))
-      ((eq? (operator expr) 'while) (whileEval expr)) )))
+      ((eq? (operator expr) 'while) (whileEval expr))
+      )))
 
 
 
@@ -78,7 +79,8 @@ Project 1
 ; A function to evaluate while loops
 
 (define whileEval
-  (lambda (expr)
+  (lambda (expr state)
     (cond
-      ((operand1 expr) (operand2 expr) (whileEval expr))
+      ((if (boolean (operand1 expr))) (value (operand2 expr) state))
+      ((if (boolean (operand1 expr))) (whileEval expr state)
     )))
