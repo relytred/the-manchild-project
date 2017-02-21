@@ -15,13 +15,10 @@ Project 1
     (statement (parser expr) '(()()))
     ))
 
-; Defining our operators to get operands and operators
+; Defining our tree parsing for statments
 (define type caar)
 (define expr1 cadar)
 (define expr2 caddar)
-
-
-
 
 (define statement
   (lambda (expr state)
@@ -32,12 +29,9 @@ Project 1
       ((eq? (type expr) 'if) (statement (cdr expr) (ifEval expr state)))
       ((eq? (type expr) 'while) (whileEval expr)) )))
 
-
 (define operator car)
 (define operand1 cadr)
 (define operand2 caddr)
-
-
 
 (define boolean
   (lambda (expr state)
@@ -83,7 +77,8 @@ Project 1
 ; A function to evaluate while loops
 
 (define whileEval
-  (lambda (expr)
+  (lambda (expr state)
     (cond
-      ((operand1 expr) (operand2 expr) (whileEval expr))
-    )))
+      ((if (boolean (operand1 expr))) (value (operand2 expr) state))
+      ((if (boolean (operand1 expr))) (whileEval expr state)
+    ))))
