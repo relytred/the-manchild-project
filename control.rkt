@@ -21,7 +21,7 @@ Project 1
 
 (define declared?
   (lambda (var state)
-    (include? (getVariables state))))
+    (include? var (getVariables state))))
 
 (define declareVariable
   (lambda (var state)

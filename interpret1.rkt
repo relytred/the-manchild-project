@@ -18,6 +18,7 @@ Project 1
 (define runTree
   (lambda (expr state)
     (cond
+      ((eq? (car expr) 'return) (value (cadar expr) state))
       ((eq? (caar expr) 'return) (value (cadar expr) state))
       (else (runTree (cdr expr) (statement (car expr) state))) )))
 
@@ -35,7 +36,9 @@ Project 1
       ((eq? (operator expr) 'var) (assignVariable (operand1 expr) (value (operand2 expr) state) state))
       ((eq? (operator expr) '=) (assignVariable (operand1 expr) (value (operand2 expr) state) state))
       ((eq? (operator expr) 'if) (ifEval expr state))
-      ((eq? (operator expr) 'while) (whileEval expr)) )))
+      ((eq? (operator expr) 'while) (whileEval expr))
+      ((eq? (operator expr) 'return) (value (cadr expr)))
+      )))
 
 ; A method to evaluate all of the boolean operations and update their states
 
@@ -69,6 +72,7 @@ Project 1
       ((eq? (operator expr) '=) (setVar (value operand1) state))
       ((eq? (operator expr) 'if) (ifEval expr))
       ((eq? (operator expr) 'while) (whileEval expr))
+      (else (boolean expr state))
       )))
 
 
