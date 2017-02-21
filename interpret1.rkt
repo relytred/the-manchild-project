@@ -20,8 +20,8 @@ Project 1
     (display expr)
     (display "\n")
     (cond
-      ((eq? (car expr) 'return)  (returnHelp expr state));(value (cadar expr) state))
-      ((eq? (caar expr) 'return) (returnHelp expr state));(value (cadar expr) state))
+      ((not (list? state)) state)
+      ((eq? (caar expr) 'return) (returnHelp expr state))
       (else (runTree (cdr expr) (statement (car expr) state))) )))
 
 ; Helper methods to determine which element is an operator or an operand in the statemnt
@@ -33,14 +33,13 @@ Project 1
 (define statement
   (lambda (expr state)
     (cond
+      ((eq? (operator expr) 'return) (value (operand1 expr) state))
       ((and (eq? (operator expr) 'var) (null? (cddr expr))) (declareVariable (operand1 expr) "null" state))
       ((eq? (operator expr) 'var) (declareVariable (operand1 expr) (value (operand2 expr) state) state))
       ((eq? (operator expr) '=) (assignVariable (operand1 expr) (value (operand2 expr) state) state))
       ((eq? (operator expr) 'if) (ifEval expr state))
-      ((eq? (operator expr) 'while) (whileEval expr))
-      ((eq? (operator expr) 'return) (value (cadr expr)))
-      )))
-
+      ((eq? (operator expr) 'while) (whileEval expr state))
+      )))   
 ; A method to evaluate all of the boolean operations and update their states
 
 (define boolean
@@ -74,10 +73,6 @@ Project 1
       ((eq? (operator expr) '*) (* (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '/) (quotient (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '%) (remainder (value (operand1 expr) state) (value (operand2 expr) state)))  
-      ((eq? (operator expr) 'return) (value (operand1 expr) state))
-      ((eq? (operator expr) '=) (setVar (value operand1) state))
-      ((eq? (operator expr) 'if) (ifEval expr))
-      ((eq? (operator expr) 'while) (whileEval expr))
       (else (boolean expr state))
       )))
 
@@ -116,10 +111,7 @@ Project 1
 
 (define whileEval
   (lambda (expr state)
-      ((boolean (operand1 expr)) (value (operand2 expr) state))
-      ((boolean (operand1 expr)) (whileEval expr state))
-    ))
-
-; A function defining true as #t and false as #f
-;(define 'true #t)
-;(define 'false #f)
+    (cond
+      ((boolean (operand1 expr) state) (whileEval expr (statement (operand2 expr) state)))
+      (else state)
+    )))
