@@ -26,8 +26,8 @@ Project 1
   (lambda (expr state)
     (cond
       ((eq? (operator expr) 'return) (value (operand1 expr) state))
-      ;((eq? (operator expr) 'var) (varDeclare (operand1 expr)))
-      ((eq? (operator expr) '=) (setVar (value operand1) state))
+      ((eq? (operator expr) 'var) (declareVariable (operand1 expr) state))
+      ((eq? (operator expr) '=) (assignVariable (operand1 expr) (operand2 expr) state))
       ((eq? (operator expr) 'if) (ifEval expr state))
       ((eq? (operator expr) 'while) (whileEval expr)) )))
 
@@ -64,16 +64,13 @@ Project 1
       (else (boolean expr state)) )))
 
 ; A function to evaluate the different possiblities in an if statement or if else statement
-
 (define ifEval
   (lambda (expr state)
-    (display expr)
-    (display "\n")
     (cond
       ((and (eq? (operator expr) 'if) (boolean (operand1 expr) state)) (value (operand2 expr) state));if succeeds
       ((not (eq? (operator expr) 'if)) (statement expr state)); else
-      ((null? cdddr(expr)) 0)
-      (else (ifEval (cadddr expr) state))
+      ((null? (cdddr expr)) 0); last if fails no else
+      (else (ifEval (cadddr expr) state)); else if
     )))
 
 ; A function to evaluate while loops

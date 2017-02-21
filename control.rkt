@@ -17,11 +17,14 @@
   (lambda (var state)
     (addVariable var "null" state)))
 
+(define assignVariable
+  (lambda (var value state)
+    (addVariable var value (removeVariable var state)))) 
+
 (define addVariable
   (lambda (var value state)
     (constructState (list (cons var (getVariables state)) (cons value (getValues state))) state))) 
     
-
 (define removeVariable
   (lambda (var state)
     (constructState (removeMatch var (getVariables state) (getValues state)) state)))
