@@ -61,7 +61,7 @@ Project 1
       ((number? expr) (inexact->exact expr))    ; the base case is just returns the value if it's a number
       ((not (list? expr)) (getValue expr state)) ;second base case where getting variable value
       ((eq? (operator expr) '+) (+ (value (operand1 expr) state) (value (operand2 expr) state)))
-      ((eq? (operator expr) '-) (- (value (operand1 expr) state) (value (operand2 expr) state)))
+      ((eq? (operator expr) '-) (subEval expr state))
       ((eq? (operator expr) '*) (* (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '/) (quotient (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '%) (remainder (value (operand1 expr) state) (value (operand2 expr) state)))  
@@ -69,6 +69,16 @@ Project 1
       ((eq? (operator expr) '=) (setVar (value operand1) state))
       ((eq? (operator expr) 'if) (ifEval expr))
       ((eq? (operator expr) 'while) (whileEval expr))
+      )))
+
+
+; A function to evaluate the - symbol works as a negative sign and as an operator
+
+(define subEval
+  (lambda (expr state)
+    (cond
+      ((null? (cddr expr)) (- 0 (value (operand1 expr) state)))
+      (else (- (value (operand1 expr) state) (value (operand2 expr) state)))
       )))
 
 ; A function to evaluate the different possiblities in an if statement or if else statement
