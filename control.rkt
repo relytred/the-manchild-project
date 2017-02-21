@@ -9,6 +9,10 @@
   (lambda (state)
     (cadr state)))
 
+(define getValue
+  (lambda (var state)
+    (getMatch var (getVariables state) (getValues state))))
+
 (define declared?
   (lambda (var state)
     (include? (getVariables state))))
@@ -45,6 +49,13 @@
       ((null? l) #f)
       ((eq? x (car l)) #t)
       (else (include? x (cdr l))))))
+
+(define getMatch
+  (lambda (x l1 l2)
+    (cond
+      ((null? l1) '())
+      ((eq? x (car l1)) (car l2))
+      (else (getMatch x (cdr l1) (cdr l2))))))
 
 (define removeMatch
   (lambda (x l1 l2)
