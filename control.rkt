@@ -1,3 +1,9 @@
+#|
+Jeffrey Noymer & Tyler Mayle
+jan88 & tcm45
+Project 1
+|#
+
 (load "simpleParser.scm")
 
 ;state functions---------------------------------------------------------------
