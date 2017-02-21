@@ -1,3 +1,13 @@
+#|
+Jeffrey Noymer & Tyler Mayle
+jan88 & tcm45
+Project 1
+|#
+
+; We are borrowing this parser to assist us in our project
+; We have not changed the parser at all
+; We do not take any credit for the contents of this file
+
 ; A simple parser for a Java-ish language
 ; EECS 345: Programming Language Concepts
 ;
