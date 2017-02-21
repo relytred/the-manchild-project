@@ -1,9 +1,3 @@
-#|
-Jeffrey Noymer & Tyler Mayle
-jan88 & tcm45
-Project 1
-|#
-
 (load "simpleParser.scm")
 
 ;state functions---------------------------------------------------------------
@@ -17,19 +11,26 @@ Project 1
 
 (define getValue
   (lambda (var state)
-    (getMatch var (getVariables state) (getValues state))))
+    (cond
+      ((not (declared? var state)) (error "variable not declared:" var))
+      ((eq? (getMatch var (getVariables state) (getValues state)) "null") (error "variable not initialized" var))
+      (else (getMatch var (getVariables state) (getValues state))) )))
 
 (define declared?
   (lambda (var state)
     (include? var (getVariables state))))
 
 (define declareVariable
-  (lambda (var state)
-    (addVariable var "null" state)))
+  (lambda (var value state)
+    (cond
+      ((declared? var state) (error "redifining:" var))
+      (else (addVariable var value state)))))
 
 (define assignVariable
   (lambda (var value state)
-    (addVariable var value (removeVariable var state)))) 
+    (cond
+     ((not (declared? var state)) (error "variable not declared:" var))
+      (else (addVariable var value (removeVariable var state)))))) 
 
 (define addVariable
   (lambda (var value state)
@@ -59,7 +60,7 @@ Project 1
 (define getMatch
   (lambda (x l1 l2)
     (cond
-      ((null? l1) '())
+      ((null? l1) #f)
       ((eq? x (car l1)) (car l2))
       (else (getMatch x (cdr l1) (cdr l2))))))
 

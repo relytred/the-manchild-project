@@ -31,9 +31,8 @@ Project 1
 (define statement
   (lambda (expr state)
     (cond
-      ;((eq? (type expr) 'return) (value (expr1 expr) state))
-      ((and (eq? (operator expr) 'var) (null? (cddr expr))) (declareVariable (operand1 expr) state))
-      ((eq? (operator expr) 'var) (assignVariable (operand1 expr) (value (operand2 expr) state) state))
+      ((and (eq? (operator expr) 'var) (null? (cddr expr))) (declareVariable (operand1 expr) "null" state))
+      ((eq? (operator expr) 'var) (declareVariable (operand1 expr) (value (operand2 expr) state) state))
       ((eq? (operator expr) '=) (assignVariable (operand1 expr) (value (operand2 expr) state) state))
       ((eq? (operator expr) 'if) (ifEval expr state))
       ((eq? (operator expr) 'while) (whileEval expr))
