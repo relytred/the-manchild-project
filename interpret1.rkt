@@ -80,7 +80,6 @@ Project 1
 
 (define whileEval
   (lambda (expr state)
-    (cond
-      ((if (boolean (operand1 expr))) (value (operand2 expr) state))
-      ((if (boolean (operand1 expr))) (whileEval expr state)
-    )))
+      ((boolean (operand1 expr)) (value (operand2 expr) state))
+      ((boolean (operand1 expr)) (whileEval expr state))
+    ))
