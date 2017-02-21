@@ -24,8 +24,9 @@ Project 1
   (lambda (expr state)
     (cond
       ((eq? (type expr) 'return) (value (expr1 expr) state))
-      ((eq? (type expr) 'var) (statement (cdr expr) (declareVariable (expr1 expr) state)))
-      ((eq? (type expr) '=) (statement (cdr expr) (assignVariable (expr1 expr) (expr2 expr) state)))
+      ((and (eq? (type expr) 'var) (null? (cddar expr))) (statement (cdr expr) (declareVariable (expr1 expr) state))) 
+      ((eq? (type expr) 'var) (statement (cdr expr) (assignVariable (expr1 expr) (value (expr2 expr) state) state)))
+      ((eq? (type expr) '=) (statement (cdr expr) (assignVariable (expr1 expr) (value (expr2 expr) state) state)))
       ((eq? (type expr) 'if) (statement (cdr expr) (ifEval expr state)))
       ((eq? (type expr) 'while) (whileEval expr)) )))
 
@@ -78,7 +79,5 @@ Project 1
 
 (define whileEval
   (lambda (expr state)
-    (cond
-      ((if (boolean (operand1 expr))) (value (operand2 expr) state))
-      ((if (boolean (operand1 expr))) (whileEval expr state)
-    ))))
+    #t
+    ))
