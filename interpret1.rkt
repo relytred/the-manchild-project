@@ -35,7 +35,7 @@ Project 1
   (lambda (expr state)
     (cond
       ((eq? (operator expr) '&&) (and (value (operand1 expr) state) (value (operand2 expr) state)))
-      ;((eq? (operator expr) '|| (or (value (operand1 expr)) (value (operand2 expr)))))
+      ((eq? (operator expr) '||) (or (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '==) (eq? (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '!=) (not (eq? (value (operand1 expr) state) (value (operand2 expr) state))))
       ((eq? (operator expr) '<=) (<= (value (operand1 expr) state) (value (operand2 expr) state)))
