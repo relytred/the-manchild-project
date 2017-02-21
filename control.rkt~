@@ -1,0 +1,59 @@
+;state functions---------------------------------------------------------------
+(define getVariables
+  (lambda (state)
+    (car state)))
+
+(define getValues
+  (lambda (state)
+    (cadr state)))
+
+(define cdrVariables
+  (lambda (state)
+    (constructState (cdr (getVariables state)) (cdr (getValues state)) state)))
+
+(define constructState
+  (lambda (vars values state)
+    (cons vars (cons values (cdr (cdr state))))))
+
+(define varValuePairs
+  (lambda (vars values)
+    (cond
+      ((null? vars ) '())
+      (else (cons (cons (car vars) (cons (car values) '())) (varValuePairs (cdr vars) (cdr values)))))))
+
+(define addVariable
+  (lambda (var value state)
+    (constructState (append (getVariables state) (cons var '())) (append (getValues state) (cons value '())) state)))
+
+(define declareVariable
+  (lambda (var state)
+    (cond
+      (addVariable(var '() state)))))
+
+(define assignVariable
+  (lambda (state)
+    (cond
+      ((null? vars) '())
+      ((eq? (car (getVariables state) var)) )
+      (else #f)))))
+
+
+
+;utility functions------------------------------------------------------------------
+(define include?
+  (lambda (x l)
+    (cond
+      ((null? l) #f)
+      ((eq? x (car l)) #t)
+      (else (include? x (cdr l))))))
+
+(define removeFirst
+  (lambda (x l)
+    (cond
+      ((null? l) '())
+      ((eq? x (car l)) (cdr l))
+      (else (cons (car l) (remove x (cdr l)))))))
+
+      
+
+

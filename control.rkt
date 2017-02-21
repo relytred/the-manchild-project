@@ -1,4 +1,5 @@
 (load "simpleParser.scm")
+
 ;state functions---------------------------------------------------------------
 (define getVariables
   (lambda (state)
