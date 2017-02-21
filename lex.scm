@@ -1,3 +1,12 @@
+#|
+Jeffrey Noymer & Tyler Mayle
+jan88 & tcm45
+Project 1
+|#
+
+; We are using this lexical analyzer, but we have not changed it
+; We do not take any credit for the contents of this file
+
 ;;===============================================================
 ;; The Lexical Analyzer
 

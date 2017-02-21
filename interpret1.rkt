@@ -22,6 +22,8 @@ Project 1
 (define operand1 cadr)
 (define operand2 caddr)
 
+
+
 (define statement
   (lambda (expr state)
     (cond
@@ -30,6 +32,8 @@ Project 1
       ((eq? (operator expr) '=) (assignVariable (operand1 expr) (operand2 expr) state))
       ((eq? (operator expr) 'if) (ifEval expr state))
       ((eq? (operator expr) 'while) (whileEval expr)) )))
+
+
 
 (define boolean
   (lambda (expr state)
@@ -56,11 +60,9 @@ Project 1
       ((eq? (operator expr) '/) (quotient (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '%) (remainder (value (operand1 expr) state) (value (operand2 expr) state)))  
       ((eq? (operator expr) 'return) (value (operand1 expr) state))
-      ;((eq? (operator expr) 'var) (varDeclare (operand1 expr)))
       ((eq? (operator expr) '=) (setVar (value operand1) state))
       ((eq? (operator expr) 'if) (ifEval expr))
       ((eq? (operator expr) 'while) (whileEval expr))
-      ;((declared? expr) (getValue expr))
       (else (boolean expr state)) )))
 
 ; A function to evaluate the different possiblities in an if statement or if else statement
