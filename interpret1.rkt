@@ -36,7 +36,7 @@ Project 1
       ((eq? (operator expr) 'var) (declareVariable (operand1 expr) (value (operand2 expr) state) state))
       ((eq? (operator expr) '=) (assignVariable (operand1 expr) (value (operand2 expr) state) state))
       ((eq? (operator expr) 'if) (ifEval expr state))
-      ((eq? (operator expr) 'while) (whileEval expr)) )))
+      ((eq? (operator expr) 'while) (whileEval expr state)) )))
 
 ; A method to evaluate all of the boolean operations and update their states
 
@@ -66,7 +66,6 @@ Project 1
       ((eq? (operator expr) '*) (* (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '/) (quotient (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '%) (remainder (value (operand1 expr) state) (value (operand2 expr) state)))  
-      ((eq? (operator expr) '=) (setVar (value operand1) state))
       (else (boolean expr state))
       )))
 
@@ -94,6 +93,7 @@ Project 1
 
 (define whileEval
   (lambda (expr state)
-      ((boolean (operand1 expr)) (value (operand2 expr) state))
-      ((boolean (operand1 expr)) (whileEval expr state))
-    ))
+    (cond
+      ((boolean (operand1 expr) state) (whileEval expr (statement (operand2 expr) state)))
+      (else state)
+    )))
