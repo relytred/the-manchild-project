@@ -1,6 +1,28 @@
 (load "simpleParser.scm")
-
+(require racket/trace)
 ;state functions---------------------------------------------------------------
+(define newstate '(() ()))
+  
+(define substate
+  (lambda (state)
+    (caddr state)))
+
+(define hasSubstate
+  (lambda (state)
+    (length state) 3) )
+
+(define addSubstate
+  (lambda (state)
+    (cond
+      ((hasSubstate state) (constructState (getVariables state) (getValues state) (addSubstate (substate state))))
+      (else (constructState (getVariables state) (getValues state) newstate)) )))
+
+(define removeSubstate
+  (lambda (state)
+    (cond
+      ((hasSubstate (substate state)) (constructState (getVariables state) (getValues state) (removeSubstate (substate state))))
+      (else (removeLast state)) )))
+
 (define getVariables
   (lambda (state)
     (car state)))
@@ -12,13 +34,16 @@
 (define getValue
   (lambda (var state)
     (cond
-      ((not (declared? var state)) (error "variable not declared:" var))
+      ((not (declared? var state)) (error "variabl`e not declared:" var))
       ((eq? (getMatch var (getVariables state) (getValues state)) "null") (error "variable not initialized" var))
       (else (getMatch var (getVariables state) (getValues state))) )))
 
 (define declared?
   (lambda (var state)
-    (include? var (getVariables state))))
+    (cond
+      ((include? var (getVariables state)) #t)
+      ((hasSubstate state) (declared? (substate state)))
+      (else #f) )))
 
 (define declareVariable
   (lambda (var value state)
@@ -44,6 +69,10 @@
   (lambda (varLists state)
     (append (list (car varLists) (cadr varLists)) (cdr (cdr state)))))
 
+(define constructState
+  (lambda (variables values subState)
+    (append (list variables values subState))))
+
 (define cdrVariables
   (lambda (state)
     (constructState (cdr (getVariables state)) (cdr (getValues state)) state)))
@@ -56,6 +85,13 @@
       ((null? l) #f)
       ((eq? x (car l)) #t)
       (else (include? x (cdr l))))))
+
+(define removeLast
+  (lambda (l)
+    (cond
+      ((eq? (length l) 1) '())
+      (else (cons (car l) (removeLast (cdr l)))))))
+    
 
 (define getMatch
   (lambda (x l1 l2)
@@ -71,8 +107,3 @@
       ((eq? x (car l1)) (list (cdr l1) (cdr l2))) 
       (else (list (cons (car l1) (car (removeMatch x (cdr l1) (cdr l2)))) (cons (car l2) (cadr (removeMatch x (cdr l1) (cdr l2)))))))))
          
-
-
-      
-
-

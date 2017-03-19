@@ -17,8 +17,6 @@ Project 1
 
 (define runTree
   (lambda (expr state)
-    (display expr)
-    (display "\n")
     (cond
       ((not (list? state)) state)
       ((eq? (caar expr) 'return) (returnHelp expr state))
