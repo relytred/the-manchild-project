@@ -14,7 +14,6 @@
       (else (print (car values)) #f))))
 
 (trace runTest)
-(trace getMatch)
 
 (define runTests
   (runTest 1 expectedValues))

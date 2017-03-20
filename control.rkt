@@ -2,6 +2,14 @@
 (require racket/trace)
 ;state functions---------------------------------------------------------------
 (define newstate '(() ()))
+
+(define getVariables
+  (lambda (state)
+    (car state)))
+
+(define getValues
+  (lambda (state)
+    (cadr state)))
   
 (define substate
   (lambda (state)
@@ -22,14 +30,6 @@
     (cond
       ((hasSubstate (substate state)) (constructSubstate (getVariables state) (getValues state) (removeSubstate (substate state))))
       (else (removeLast state)) )))
-
-(define getVariables
-  (lambda (state)
-    (car state)))
-
-(define getValues
-  (lambda (state)
-    (cadr state)))
 
 (define getValue
   (lambda (var state)
@@ -61,20 +61,30 @@
 (define assignVariable
   (lambda (var value state)
     (cond
-     ((not (declared? var state)) (error "variable not declared:" var))
-      (else (addVariable var value (removeVariable var state)))))) 
+      ((not (declared? var state)) (error "variable not declared:" var))
+      (else (replaceVariable var value state))) ))
+
+(define replaceVariable
+  (lambda (var value state)
+    (cond
+      ((include? var (getVariables state)) (constructState
+                                            (cons var (getVariables (removeMatch var (getVariables state) (getValues state))))
+                                            (cons value (getValues (removeMatch var (getVariables state) (getValues state))))
+                                            state))                                            
+      ((hasSubstate state) (constructSubstate (getVariables state) (getValues state) (replaceVariable var value (substate state))))
+      (else state) )))
 
 (define addVariable
   (lambda (var value state)
-    (constructState (list (cons var (getVariables state)) (cons value (getValues state))) state))) 
+    (cond
+      ((hasSubstate state) (constructSubstate (getVariables state) (getValues state) (addVariable var value (substate state))))
+      (else (constructState (cons var (getVariables state)) (cons value (getValues state)) state)) )))
     
-(define removeVariable
-  (lambda (var state)
-    (constructState (removeMatch var (getVariables state) (getValues state)) state)))
-
 (define constructState
-  (lambda (varLists state)
-    (append (list (car varLists) (cadr varLists)) (cdr (cdr state)))))
+  (lambda (vars values state)
+    (cond
+      ((hasSubstate state) (list vars values (substate state)))
+      (else (list vars values)) )))
 
 (define constructSubstate
   (lambda (variables values subState)
@@ -95,14 +105,6 @@
       ((eq? (length l) 1) '())
       (else (cons (car l) (removeLast (cdr l)))))))
     
-
-(define matchingValue
-  (lambda (x l1 l2)
-    (cond
-      ((null? l1) #f)
-      ((eq? x (car l1)) (car l2))
-      (else (matchingValue x (cdr l1) (cdr l2))))))
-
 (define removeMatch
   (lambda (x l1 l2)
     (cond
