@@ -1,3 +1,5 @@
+(load "simpleParser.scm")
+
 ;state functions---------------------------------------------------------------
 (define getVariables
   (lambda (state)
@@ -7,36 +9,44 @@
   (lambda (state)
     (cadr state)))
 
-(define cdrVariables
-  (lambda (state)
-    (constructState (cdr (getVariables state)) (cdr (getValues state)) state)))
-
-(define constructState
-  (lambda (vars values state)
-    (cons vars (cons values (cdr (cdr state))))))
-
-(define varValuePairs
-  (lambda (vars values)
+(define getValue
+  (lambda (var state)
     (cond
-      ((null? vars ) '())
-      (else (cons (cons (car vars) (cons (car values) '())) (varValuePairs (cdr vars) (cdr values)))))))
+      ((not (declared? var state)) (error "variable not declared:" var))
+      ((eq? (getMatch var (getVariables state) (getValues state)) "null") (error "variable not initialized" var))
+      (else (getMatch var (getVariables state) (getValues state))) )))
+
+(define declared?
+  (lambda (var state)
+    (include? var (getVariables state))))
+
+(define declareVariable
+  (lambda (var value state)
+    (cond
+      ((declared? var state) (error "redifining:" var))
+      (else (addVariable var value state)))))
+
+(define assignVariable
+  (lambda (var value state)
+    (cond
+     ((not (declared? var state)) (error "variable not declared:" var))
+      (else (addVariable var value (removeVariable var state)))))) 
 
 (define addVariable
   (lambda (var value state)
-    (constructState (append (getVariables state) (cons var '())) (append (getValues state) (cons value '())) state)))
-
-(define declareVariable
+    (constructState (list (cons var (getVariables state)) (cons value (getValues state))) state))) 
+    
+(define removeVariable
   (lambda (var state)
-    (cond
-      (addVariable(var '() state)))))
+    (constructState (removeMatch var (getVariables state) (getValues state)) state)))
 
-(define assignVariable
+(define constructState
+  (lambda (varLists state)
+    (append (list (car varLists) (cadr varLists)) (cdr (cdr state)))))
+
+(define cdrVariables
   (lambda (state)
-    (cond
-      ((null? vars) '())
-      ((eq? (car (getVariables state) var)) )
-      (else #f)))))
-
+    (constructState (cdr (getVariables state)) (cdr (getValues state)) state)))
 
 
 ;utility functions------------------------------------------------------------------
@@ -47,12 +57,21 @@
       ((eq? x (car l)) #t)
       (else (include? x (cdr l))))))
 
-(define removeFirst
-  (lambda (x l)
+(define getMatch
+  (lambda (x l1 l2)
     (cond
-      ((null? l) '())
-      ((eq? x (car l)) (cdr l))
-      (else (cons (car l) (remove x (cdr l)))))))
+      ((null? l1) #f)
+      ((eq? x (car l1)) (car l2))
+      (else (getMatch x (cdr l1) (cdr l2))))))
+
+(define removeMatch
+  (lambda (x l1 l2)
+    (cond
+      ((null? l1) '(() ()))
+      ((eq? x (car l1)) (list (cdr l1) (cdr l2))) 
+      (else (list (cons (car l1) (car (removeMatch x (cdr l1) (cdr l2)))) (cons (car l2) (cadr (removeMatch x (cdr l1) (cdr l2)))))))))
+         
+
 
       
 

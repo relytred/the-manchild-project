@@ -17,8 +17,6 @@ Project 1
 
 (define runTree
   (lambda (expr state)
-    (display expr)
-    (display "\n")
     (cond
       ((not (list? state)) state)
       ((eq? (caar expr) 'return) (returnHelp expr state))
@@ -47,7 +45,6 @@ Project 1
     (cond
       ((and (not (list? expr)) (eq? expr 'true)) #t)
       ((and (not (list? expr)) (eq? expr 'false)) #f)
-      ((not (list? expr)) (getValue expr state))
       ((eq? (operator expr) '&&) (and (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '||) (or (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '==) (eq? (value (operand1 expr) state) (value (operand2 expr) state)))
