@@ -1,13 +1,8 @@
-var b = 1476;
+var a = 3;
+var b = 4;
 if (a < b) {
   var temp = a;
   a = b;
   b = temp;
-}
-var r = a % b;
-while (r != 0) {
-  a = b;
-  b = r;
-  r = a % b;
 }
 return b;

@@ -43,13 +43,13 @@
     (cond
       ((null? (getVariables state)) (getMatch var (substate state)))
       ((eq? var (car (getVariables state))) (car (getValues state)))
-      (else (getMatch var (constructSubstate (cdr (getVariables state)) (cdr (getValues state))  state))) )))  
+      (else (getMatch var (constructState (cdr (getVariables state)) (cdr (getValues state))  state))) )))  
 
 (define declared?
   (lambda (var state)
     (cond
       ((include? var (getVariables state)) #t)
-      ((hasSubstate state) (declared? (substate state)))
+      ((hasSubstate state) (declared? var (substate state)))
       (else #f) )))
 
 (define declareVariable
