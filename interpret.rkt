@@ -67,7 +67,7 @@ Project 1
       ((eq? (operator expr) '>=) (>= (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '>) (> (value (operand1 expr) state) (value (operand2 expr) state)))
       ((eq? (operator expr) '<) (< (value (operand1 expr) state) (value (operand2 expr) state)))
-      ((eq? (operator expr) '!) (not operand1))
+      ((eq? (operator expr) '!) (not (value (operand1 expr) state)))
       
       (else (error "unknown operator:" (operator expr))) )))
       
@@ -124,6 +124,6 @@ Project 1
 (define whileEval
   (lambda (expr state)
     (cond
-      ((boolean (operand1 expr) state) (whileEval expr (statement (operand2 expr) state)))
+      ((boolean (operand1 expr) state) (whileEval expr (runTree (cons (operand2 expr) '()) state)))
       (else state)
     )))
