@@ -15,11 +15,17 @@ Project 1
     (runTree (parser expr) '(()()))
     ))
 
+(define block?
+  (lambda (expr)
+    (eq? (car expr) 'begin)))
+
 (define runTree
   (lambda (expr state)
     (cond
+      ((null? expr) state)
       ((not (list? state)) state)
       ((eq? (caar expr) 'return) (returnHelp expr state))
+      ((block? (car expr)) (runTree (cdr expr) (block (cdar expr) (addSubstate state)))) 
       (else (runTree (cdr expr) (statement (car expr) state))) )))
 
 ; Helper methods to determine which element is an operator or an operand in the statemnt
@@ -27,6 +33,13 @@ Project 1
 (define operator car)
 (define operand1 cadr)
 (define operand2 caddr)
+
+(define block
+  (lambda (exprs state)
+    (cond
+      ((null? exprs) (removeSubstate state))
+      ((block? exprs) (block (cdr exprs)(addSubstate state) ))
+      (else (block (cdr exprs) (statement (car exprs) state))) )))  
 
 (define statement
   (lambda (expr state)
@@ -99,7 +112,7 @@ Project 1
 (define ifEval
   (lambda (expr state)
     (cond
-      ((and (eq? (operator expr) 'if) (boolean (operand1 expr) state)) (statement (operand2 expr) state));if succeeds
+      ((and (eq? (operator expr) 'if) (boolean (operand1 expr) state)) (runTree (cons (operand2 expr) '()) state));if succeeds
       ((not (eq? (operator expr) 'if)) (statement expr state)); else
       ((null? (cdddr expr)) state); last if fails no else
       (else (ifEval (cadddr expr) state)); else if

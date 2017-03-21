@@ -65,7 +65,7 @@ Project 1
     (cond
       ((null? (getVariables state)) (getMatch var (substate state)))
       ((eq? var (car (getVariables state))) (car (getValues state)))
-      (else (getMatch var (constructSubstate (cdr (getVariables state)) (cdr (getValues state))  state))) )))  
+      (else (getMatch var (constructState (cdr (getVariables state)) (cdr (getValues state))  state))) )))  
 
 ; A fuction to determine weather or not a variable has been declared yet
 
@@ -73,7 +73,7 @@ Project 1
   (lambda (var state)
     (cond
       ((include? var (getVariables state)) #t)
-      ((hasSubstate state) (declared? (substate state)))
+      ((hasSubstate state) (declared? var (substate state)))
       (else #f) )))
 
 ; A function to declare a variable and add it to a state

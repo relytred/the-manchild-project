@@ -40,13 +40,4 @@
 (define runTests
   (print (runTest1 1 expectedValues1))
   (print (runTest 2 expectedValues2))
-  )
-
-
-       
-    
-    
- 
-
-      
-      
+  )     
