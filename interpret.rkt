@@ -125,15 +125,3 @@ Project 1
       ((boolean (operand1 expr) state) (whileEval expr (runTree (cons (operand2 expr) '()) state return) return))
       (else state)
     )))
-
-(define test
-  (lambda (x)
-    (call/cc
-     (lambda (return)
-       (other x return) ))))
-
-(define other
-  (lambda (x return)
-    (cond
-      ((> x 5) (* x (other (- x 1) return)))
-      (else (return x)))))
