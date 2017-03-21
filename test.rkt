@@ -2,7 +2,7 @@
 (require racket/trace)
 
 (define expectedValues
-  '(150 -4 10 16 220 5 6 10 5 -39 true 10 false true 128 12))
+  '(150 -4 10 16 220 5 6 10 5 -39 true 100 false true 128 12))
 
 (define interpretTest
   (lambda (i)
