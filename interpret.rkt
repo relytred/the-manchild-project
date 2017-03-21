@@ -31,7 +31,8 @@ Project 1
       ((null? expr) state)
       ((not (list? state)) state)
       ((eq? (caar expr) 'return) (returnHelp expr state))
-      ((block? (car expr)) (runTree (cdr expr) (block (cdar expr) (addSubstate state)))) 
+      ((block? (car expr)) (runTree (cdr expr) (block (cdar expr) (addSubstate state))))
+      ((and (block? (car expr)) (eq? (cadr expr) 'return)) (returnHelp expr state))
       (else (runTree (cdr expr) (statement (car expr) state))) )))
 
 ; Helper methods to determine which element is an operator or an operand in the statemnt
