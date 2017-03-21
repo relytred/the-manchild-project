@@ -38,5 +38,5 @@
       )))
 
 (define runTests
-  (print (runTest1 1 expectedValues1) (runTest2 2 expectedValues2))
+  (print (runTest1 1 expectedValues1) (runTest2 1 expectedValues2))
   )
