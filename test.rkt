@@ -31,12 +31,12 @@
 (define runTest2
   (lambda (i values)
     (cond
-      ((> i 16) #t)
+      ((> i 5) #t)
       ((not (list? values)) "Why")
       ((eq? (interpretTest2 i) (car values)) (runTest2 (+ i 1) (cdr values)))
       (else (error "Test" i "should be equal to" (car values) "not" (interpretTest2 i)))
       )))
 
 (define runTests
-  (print (runTest1 1 expectedValues1) (runTest2 1 expectedValues2))
+  (print (and (runTest1 1 expectedValues1) (runTest2 1 expectedValues2)))
   )
