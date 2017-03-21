@@ -16,7 +16,7 @@ Project 1
   (lambda (expr)
     (call/cc
        (lambda (return)
-         (runTree (parser expr) newstate return) ))))
+         (runTree (parser expr) newstate return "null") ))))
 
 ; A method to determine whether or not the expr is the beginning of a block
 
@@ -27,11 +27,11 @@ Project 1
 ; A method that facilitates all of the activity of the program
 
 (define runTree
-  (lambda (expr state return)
+  (lambda (expr state return break)
     (cond
       ((null? expr) state)
-      ((block? (car expr)) (runTree (cdr expr) (block (cdar expr) (addSubstate state) return) return)) 
-      (else (runTree (cdr expr) (statement (car expr) state return) return)) )))
+      ((block? (car expr)) (runTree (cdr expr) (block (cdar expr) (addSubstate state) return break) return break)) 
+      (else (runTree (cdr expr) (statement (car expr) state return break) return break)) )))
 
 ; Helper methods to determine which element is an operator or an operand in the statemnt
 
@@ -42,23 +42,26 @@ Project 1
 ; A function to facilitate the handling of substate blocks
 
 (define block
-  (lambda (exprs state return)
+  (lambda (exprs state return break)
     (cond
       ((null? exprs) (removeSubstate state))
-      ((block? exprs) (block (cdr exprs)(addSubstate state) ))
-      (else (block (cdr exprs) (statement (car exprs) state))) )))  
+      ((block? exprs) (block (cdr exprs) (block (car exprs)(addSubstate state) return break) return break))
+      (else (block (cdr exprs) (statement (car exprs) state return break) return break)) )))  
 
 ; A function to evaluate different types of statements
 
 (define statement
-  (lambda (expr state return)
+  (lambda (expr state return break)
     (cond
       ((eq? (operator expr) 'return) (return (returnHelp expr state)))
       ((and (eq? (operator expr) 'var) (null? (cddr expr))) (declareVariable (operand1 expr) "null" state))
       ((eq? (operator expr) 'var) (declareVariable (operand1 expr) (value (operand2 expr) state) state))
       ((eq? (operator expr) '=) (assignVariable (operand1 expr) (value (operand2 expr) state) state))
-      ((eq? (operator expr) 'if) (ifEval expr state return))
-      ((eq? (operator expr) 'while) (whileEval expr state return))
+      ((eq? (operator expr) 'if) (ifEval expr state return break))
+      ((eq? (operator expr) 'while) (call/cc
+                                     (lambda (breakPoint)
+                                       (whileEval expr state return breakPoint))))
+      ((eq? (operator expr) 'break) (breakEval state break))
       )))   
 ; A method to evaluate all of the boolean operations and update their states
 
@@ -119,19 +122,29 @@ Project 1
 
 ; A function to evaluate the different possiblities in an if statement or if else statement
 (define ifEval
-  (lambda (expr state return)
+  (lambda (expr state return break)
     (cond
-      ((and (eq? (operator expr) 'if) (boolean (operand1 expr) state)) (runTree (cons (operand2 expr) '()) state return));if succeeds
-      ((not (eq? (operator expr) 'if)) (runTree (cons expr '()) state return)); else
+      ((and (eq? (operator expr) 'if) (boolean (operand1 expr) state)) (runTree (cons (operand2 expr) '()) state return break));if succeeds
+      ((not (eq? (operator expr) 'if)) (runTree (cons expr '()) state return break)); else
       ((null? (cdddr expr)) state); last if fails no else
-      (else (ifEval (cadddr expr) state return)); else if
+      (else (ifEval (cadddr expr) state return break)); else if
     )))
 
 ; A function to evaluate while loops
 
 (define whileEval
-  (lambda (expr state return)
+  (lambda (expr state return break)
     (cond
-      ((boolean (operand1 expr) state) (whileEval expr (runTree (cons (operand2 expr) '()) state return) return))
+      ((boolean (operand1 expr) state) (whileEval expr (runTree (cons (operand2 expr) '()) state return break) return break))
       (else state)
     )))
+
+(define canBreak
+  (lambda (break)
+    (not (eq? break "null"))))
+
+(define breakEval
+  (lambda (state break)
+    (cond
+      ((canBreak break) (break (removeSubstate state)))
+      (else (error "Illegal use of break statement")) )))
