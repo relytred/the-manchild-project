@@ -4,8 +4,10 @@ jan88 & tcm45
 Project 1
 |#
 
+
 (load "simpleParser.scm")
 (load "control.rkt")
+(require racket/trace)
 
 
 ; A method to take in an external string file and read it into our interpreter
@@ -16,9 +18,13 @@ Project 1
        (lambda (return)
          (runTree (parser expr) newstate return) ))))
 
+; A method to determine whether or not the expr is the beginning of a block
+
 (define block?
   (lambda (expr)
     (eq? (car expr) 'begin)))
+
+; A method that facilitates all of the activity of the program
 
 (define runTree
   (lambda (expr state return)
@@ -33,12 +39,16 @@ Project 1
 (define operand1 cadr)
 (define operand2 caddr)
 
+; A function to facilitate the handling of substate blocks
+
 (define block
   (lambda (exprs state return)
     (cond
       ((null? exprs) (removeSubstate state))
       ((block? exprs) (block (cdr exprs)(addSubstate state) ))
       (else (block (cdr exprs) (statement (car exprs) state))) )))  
+
+; A function to evaluate different types of statements
 
 (define statement
   (lambda (expr state return)
