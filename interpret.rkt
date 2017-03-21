@@ -6,6 +6,7 @@ Project 1
 
 (load "simpleParser.scm")
 (load "control.rkt")
+(require racket/trace)
 
 
 ; A method to take in an external string file and read it into our interpreter
