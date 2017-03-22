@@ -183,15 +183,15 @@ Project 2
   (lambda (expr state return break cont throw)
     (call/cc
      (lambda (catch)
-       (runTree (cadr expr) state return break cont catch))) ))
+       (runTree (cadr expr) (addSubstate state) return break cont catch))) ))
 
 (define throwEval
   (lambda (expr state throw)
-    (throw (append state (cons (value (operand1 expr) state) '())) )))
+    (throw (cons (value (operand1 expr) state) state)) ))
 
 (define thrown?
   (lambda (state)
-    (eq? (length throwValue) 4)))
+    (not (list? (first state)))))
 
 (define catchStatement
  (lambda (expr)
@@ -206,12 +206,12 @@ Project 2
     (caddr (catchStatement expr)) ))
 
 (define catchState
-  (lambda (var throwValue state)
-    (declareVariable var (value throwValue state) (addSubstate state))))
+  (lambda (var state)
+    (declareVariable var (value (first state) (pop state)) (addSubstate (removeSubstate (pop state))))))
 
 (define catchEval
- (lambda (expr state return break cont throw throwValue)
+ (lambda (expr state return break cont throw)
    (cond
-     ((not (thrown? throwValue)) throwValue) 
+     ((not (thrown? state)) (removeSubstate state)) 
      ((null? (catchStatement expr)) (error "Illegal throw"))
-     (else (runTree (catchBody expr) (catchState (catchVar expr) throwValue state) return break cont throw)) )))
+     (else (removeSubstate (runTree (catchBody expr) (catchState (catchVar expr) state) return break cont throw))) )))
