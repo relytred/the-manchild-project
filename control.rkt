@@ -8,6 +8,8 @@ Project 1
 (require racket/trace)
 ;state functions---------------------------------------------------------------
 (define newstate '(() ()))
+(define pop cdr)
+(define push cons)
 
 ; A fuction to get the variables of a given state
 
@@ -64,8 +66,8 @@ Project 1
   (lambda (var state)
     (cond
       ((null? (getVariables state)) (getMatch var (substate state)))
-      ((eq? var (car (getVariables state))) (car (getValues state)))
-      (else (getMatch var (constructState (cdr (getVariables state)) (cdr (getValues state))  state))) )))  
+      ((eq? var (first (getVariables state))) (first (getValues state)))
+      (else (getMatch var (constructState (pop (getVariables state)) (pop (getValues state))  state))) )))  
 
 ; A fuction to determine weather or not a variable has been declared yet
 
@@ -98,8 +100,8 @@ Project 1
   (lambda (var value state)
     (cond
       ((include? var (getVariables state)) (constructState
-                                            (cons var (getVariables (removeMatch var (getVariables state) (getValues state))))
-                                            (cons value (getValues (removeMatch var (getVariables state) (getValues state))))
+                                            (push var (getVariables (removeMatch var (getVariables state) (getValues state))))
+                                            (push value (getValues (removeMatch var (getVariables state) (getValues state))))
                                             state))                                            
       ((hasSubstate state) (constructSubstate (getVariables state) (getValues state) (replaceVariable var value (substate state))))
       (else state) )))
@@ -110,7 +112,7 @@ Project 1
   (lambda (var value state)
     (cond
       ((hasSubstate state) (constructSubstate (getVariables state) (getValues state) (addVariable var value (substate state))))
-      (else (constructState (cons var (getVariables state)) (cons value (getValues state)) state)) )))
+      (else (constructState (push var (getVariables state)) (push value (getValues state)) state)) )))
 
 ; A function to construct a state
 
@@ -135,8 +137,8 @@ Project 1
   (lambda (x l)
     (cond
       ((null? l) #f)
-      ((eq? x (car l)) #t)
-      (else (include? x (cdr l))))))
+      ((eq? x (first l)) #t)
+      (else (include? x (pop l))))))
 
 ; A function remove the last of a list
 
@@ -144,7 +146,7 @@ Project 1
   (lambda (l)
     (cond
       ((eq? (length l) 1) '())
-      (else (cons (car l) (removeLast (cdr l)))))))
+      (else (push (first l) (removeLast (pop l)))))))
 
 ; A function to remove an element and its corresponding value from two matched lists
 
@@ -152,6 +154,6 @@ Project 1
   (lambda (x l1 l2)
     (cond
       ((null? l1) '(() ()))
-      ((eq? x (car l1)) (list (cdr l1) (cdr l2))) 
-      (else (list (cons (car l1) (car (removeMatch x (cdr l1) (cdr l2)))) (cons (car l2) (cadr (removeMatch x (cdr l1) (cdr l2)))))))))
+      ((eq? x (first l1)) (list (pop l1) (pop l2))) 
+      (else (list (push (first l1) (first (removeMatch x (pop l1) (pop l2)))) (push (first l2) (cadr (removeMatch x (pop l1) (pop l2)))))))))
          
