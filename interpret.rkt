@@ -16,7 +16,7 @@ Project 2
   (lambda (expr)
     (call/cc
        (lambda (return)
-         (runTree (parser expr) newstate return "null" "null") ))))
+         (runTree (parser expr) newstate return "null" "null" "null") ))))
 
 ; A method to determine whether or not the expr is the beginning of a block
 
@@ -24,14 +24,19 @@ Project 2
   (lambda (expr)
     (eq? (car expr) 'begin)))
 
+(define try?
+  (lambda (expr)
+    (or (eq? (car expr) 'try))))
+
 ; A method that facilitates all of the activity of the program
 
 (define runTree
-  (lambda (expr state return break cont)
+  (lambda (expr state return break cont throw)
     (cond
       ((null? expr) state)
-      ((block? (car expr)) (runTree (cdr expr) (block (cdar expr) (addSubstate state) return break cont) return break cont)) 
-      (else (runTree (cdr expr) (statement (car expr) state return break cont) return break cont)) )))
+      ((try? (car expr)) (runTree (cdr expr) (tryEval (cdar expr) (addSubstate state) return break cont throw) return break cont throw))
+      ((block? (car expr)) (runTree (cdr expr) (block (cdar expr) (addSubstate state) return break cont throw) return break cont throw)) 
+      (else (runTree (cdr expr) (statement (car expr) state return break cont throw) return break cont throw)) )))
 
 ; Helper methods to determine which element is an operator or an operand in the statemnt
 
@@ -43,29 +48,29 @@ Project 2
 ; A function to facilitate the handling of substate blocks
 
 (define block
-  (lambda (exprs state return break cont)
+  (lambda (exprs state return break cont throw)
     (cond
       ((null? exprs) (removeSubstate state))
-      ((block? exprs) (block (cdr exprs) (block (car exprs)(addSubstate state) return break cont) return break cont))
-      (else (block (cdr exprs) (statement (car exprs) state return break cont) return break cont)) )))  
+      ((block? exprs) (block (cdr exprs) (block (car exprs)(addSubstate state) return break cont throw) return break cont throw))
+      (else (block (cdr exprs) (statement (car exprs) state return break cont throw) return break cont throw)) )))  
 
 ; A function to evaluate different types of statements
 
 (define statement
-  (lambda (expr state return break cont)
+  (lambda (expr state return break cont throw)
     (cond
       ((eq? (operator expr) 'return) (return (returnHelp expr state)))
       ((and (eq? (operator expr) 'var) (null? (cddr expr))) (declareVariable (operand1 expr) "null" state))
       ((eq? (operator expr) 'var) (declareVariable (operand1 expr) (value (operand2 expr) state) state))
       ((eq? (operator expr) '=) (assignVariable (operand1 expr) (value (operand2 expr) state) state))
-      ((eq? (operator expr) 'if) (ifEval expr state return break cont))
+      ((eq? (operator expr) 'if) (ifEval expr state return break cont throw))
       ((eq? (operator expr) 'while) (call/cc
                                      (lambda (breakPoint)
                                        (whileEval expr state return breakPoint cont))))
-      ((eq? (operator expr) 'break) (breakEval state break))
-      ((eq? (operator expr) 'continue) (continueEval state cont))
-      ((eq? (operator expr) 'try) (tryEval expr state return break cont))
-      ((eq? (operator expr) 'throw) (goToCatch expr state return break eval #f))
+      ((eq? (operator expr) 'break) (breakEval state break) throw)
+      ((eq? (operator expr) 'continue) (continueEval state cont) throw)
+      ((eq? (operator expr) 'try) (tryEval expr state return break cont throw))
+      ((eq? (operator expr) 'throw) (catchEval expr state return break cont throw))
       )))   
 ; A method to evaluate all of the boolean operations and update their states
 
@@ -126,25 +131,25 @@ Project 2
 
 ; A function to evaluate the different possiblities in an if statement or if else statement
 (define ifEval
-  (lambda (expr state return break cont)
+  (lambda (expr state return break cont throw)
     (cond
-      ((and (eq? (operator expr) 'if) (boolean (operand1 expr) state)) (runTree (cons (operand2 expr) '()) state return break cont));if succeeds
-      ((not (eq? (operator expr) 'if)) (runTree (cons expr '()) state return break cont)); else
+      ((and (eq? (operator expr) 'if) (boolean (operand1 expr) state)) (runTree (cons (operand2 expr) '()) state return break cont throw));if succeeds
+      ((not (eq? (operator expr) 'if)) (runTree (cons expr '()) state return break cont throw)); else
       ((null? (cdddr expr)) state); last if fails no else
-      (else (ifEval (cadddr expr) state return break cont)); else if
+      (else (ifEval (cadddr expr) state return break cont throw)); else if
     )))
 
 ; A function to evaluate while loops
 
 (define whileEval
-  (lambda (expr state return break cont)
+  (lambda (expr state return break cont throw)
     (cond
       ((boolean (operand1 expr) state)
        (whileEval expr
                   (call/cc
                    (lambda (continue)
-                     (runTree (cons (operand2 expr) '()) state return break continue)))
-                     return break cont))
+                     (runTree (cons (operand2 expr) '()) state return break continue throw)))
+                     return break cont throw))
       (else state)
     )))
 
@@ -170,18 +175,27 @@ Project 2
 
   ; A function to evaluate try catch blocks
 
-(define tryEval
-  (lambda (expr state return break cont)
-    (cond
-      ((and () (statement (operand1 expr) state return break cont)))
-      ((and () (statement (operand2 expr) state return break cont)))
-      ;((caught) (catchEval expr state return break cont))
-      (null?(statement (operand2 expr) state return break cont))
-      )))
+(define hasCatch
+  (lambda (expr)
+    (not (null? (caddr expr)))
+    ))
 
-#|(catchEval
- (lambda (expr state return break cont)
+(define tryEval
+  (lambda (expr state return break cont throw)
+    (cond
+      ((hasCatch expr) (call/cc
+                        (lambda (catch)
+                            (runTree (cdar expr) state return break cont catch))))
+      (else (runTree (cdr expr) state return break cont throw))
+       )))
+
+(define catchBody
+ (lambda (expr)
+   (cddr (expr))))
+
+(define catchEval
+ (lambda (expr state return break cont catch)
    (cond
      ((statement expr state return break cont))
+     (catch (runTree catchBody (Re)))
      )))
-|#
