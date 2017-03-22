@@ -68,7 +68,7 @@ Project 2
                                        (whileEval expr state return breakPoint cont throw))))
       ((eq? (operator expr) 'break) (breakEval state break) throw)
       ((eq? (operator expr) 'continue) (continueEval state cont) throw)
-      ((eq? (operator expr) 'try) (catchEval expr state return break cont throw (tryEval expr state return break cont throw)))
+      ((eq? (operator expr) 'try) (catchEval expr (tryEval expr state return break cont throw) return break cont throw))
       ((eq? (operator expr) 'throw) (throwEval expr state throw))
       )))   
 ; A method to evaluate all of the boolean operations and update their states
@@ -187,11 +187,11 @@ Project 2
 
 (define throwEval
   (lambda (expr state throw)
-    (throw (value (operand1 expr) state))))
+    (throw (append state (cons (value (operand1 expr) state) '())) )))
 
 (define thrown?
-  (lambda (throwValue)
-    (not (list? throwValue))))
+  (lambda (state)
+    (eq? (length throwValue) 4)))
 
 (define catchStatement
  (lambda (expr)
