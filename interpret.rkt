@@ -15,8 +15,8 @@ Project 2
 (define interpret
   (lambda (expr)
     (call/cc
-       (lambda (return)
-         (runTree (parser expr) newstate return "null" "null" "null") ))))
+     (lambda (return)
+       (runTree (parser expr) newstate return "null" "null" "null") ))))
 
 ; A method to determine whether or not the expr is the beginning of a block
 
@@ -136,7 +136,7 @@ Project 2
       ((not (eq? (operator expr) 'if)) (runTree (cons expr '()) state return break cont throw)); else
       ((null? (cdddr expr)) state); last if fails no else
       (else (ifEval (cadddr expr) state return break cont throw)); else if
-    )))
+      )))
 
 ; A function to evaluate while loops
 
@@ -148,9 +148,9 @@ Project 2
                   (call/cc
                    (lambda (continue)
                      (runTree (cons (operand2 expr) '()) state return break continue throw)))
-                     return break cont throw))
+                  return break cont throw))
       (else state)
-    )))
+      )))
 
 ; A function to determine whether or not a method can break
 
@@ -172,11 +172,11 @@ Project 2
       ((inLoop cont) (cont state))
       (else (error "Illegal use of continue statement")) )))
 
-  ; A function to evaluate try catch blocks
+; A function to evaluate try catch blocks
 
 (define hasCatch
   (lambda (expr)
-    (not (null? (caddr expr)))
+    (not (null? (operand2 expr)))
     ))
 
 (define tryEval
