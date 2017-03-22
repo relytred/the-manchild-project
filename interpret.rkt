@@ -64,7 +64,8 @@ Project 2
                                        (whileEval expr state return breakPoint cont))))
       ((eq? (operator expr) 'break) (breakEval state break))
       ((eq? (operator expr) 'continue) (continueEval state cont))
-      ((eq? (operator expr) 'try) (tryEval state))
+      ((eq? (operator expr) 'try) (tryEval expr state return break cont))
+      ((eq? (operator expr) 'throw) (goToCatch expr state return break eval #f))
       )))   
 ; A method to evaluate all of the boolean operations and update their states
 
@@ -170,8 +171,17 @@ Project 2
   ; A function to evaluate try catch blocks
 
 (define tryEval
-  (lambda (state break)
+  (lambda (expr state return break cont)
     (cond
-      ((null? operand2) ())
-      (else #f)
+      ((and () (statement (operand1 expr) state return break cont)))
+      ((and () (statement (operand2 expr) state return break cont)))
+      ;((caught) (catchEval expr state return break cont))
+      (null?(statement (operand2 expr) state return break cont))
       )))
+
+#|(catchEval
+ (lambda (expr state return break cont)
+   (cond
+     ((statement expr state return break cont))
+     )))
+|#
