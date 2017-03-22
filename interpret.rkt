@@ -68,7 +68,9 @@ Project 2
                                        (whileEval expr state return breakPoint cont throw))))
       ((eq? (operator expr) 'break) (breakEval state break) throw)
       ((eq? (operator expr) 'continue) (continueEval state cont) throw)
-      ((eq? (operator expr) 'try) (catchEval expr (tryEval expr state return break cont throw) return break cont throw))
+      ((eq? (operator expr) 'try) (finallyEval expr (catchEval expr (tryEval expr state return break cont throw)
+                                                               return break cont throw)
+                                               return break cont throw))
       ((eq? (operator expr) 'throw) (throwEval expr state throw))
       )))   
 ; A method to evaluate all of the boolean operations and update their states
@@ -187,7 +189,9 @@ Project 2
 
 (define throwEval
   (lambda (expr state throw)
-    (throw (cons (value (operand1 expr) state) state)) ))
+    (cond
+      ((eq? throw "null") (error "Illegal throw"))
+      (else (throw (cons (value (operand1 expr) state) state))) )))
 
 (define thrown?
   (lambda (state)
@@ -212,6 +216,23 @@ Project 2
 (define catchEval
  (lambda (expr state return break cont throw)
    (cond
-     ((not (thrown? state)) (removeSubstate state)) 
-     ((null? (catchStatement expr)) (error "Illegal throw"))
-     (else (removeSubstate (runTree (catchBody expr) (catchState (catchVar expr) state) return break cont throw))) )))
+     ((not (thrown? state)) state)
+     (else (runTree (catchBody expr) (catchState (catchVar expr) state) return break cont throw)) )))
+
+(define finallyStatement
+  (lambda (expr)
+    (cadddr expr)) )
+
+(define finallyBody
+  (lambda (expr)
+    (cadr (finallyStatement expr)) ))
+
+(define finallyState
+  (lambda (state)
+    (addSubstate (removeSubstate state)) ))
+
+(define finallyEval
+  (lambda (expr state return break cont throw)
+    (cond
+      ((null? (finallyStatement expr)) (removeSubstate state))
+      (else (removeSubstate (runTree (finallyBody expr) (finallyState state) return break cont throw))) ))) 
