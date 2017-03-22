@@ -34,7 +34,6 @@ Project 2
   (lambda (expr state return break cont throw)
     (cond
       ((null? expr) state)
-      ((try? (car expr)) (runTree (cdr expr) (tryEval (cdar expr) (addSubstate state) return break cont throw) return break cont throw))
       ((block? (car expr)) (runTree (cdr expr) (block (cdar expr) (addSubstate state) return break cont throw) return break cont throw)) 
       (else (runTree (cdr expr) (statement (car expr) state return break cont throw) return break cont throw)) )))
 
@@ -66,11 +65,11 @@ Project 2
       ((eq? (operator expr) 'if) (ifEval expr state return break cont throw))
       ((eq? (operator expr) 'while) (call/cc
                                      (lambda (breakPoint)
-                                       (whileEval expr state return breakPoint cont))))
+                                       (whileEval expr state return breakPoint cont throw))))
       ((eq? (operator expr) 'break) (breakEval state break) throw)
       ((eq? (operator expr) 'continue) (continueEval state cont) throw)
-      ((eq? (operator expr) 'try) (tryEval expr state return break cont throw))
-      ((eq? (operator expr) 'throw) (catchEval expr state return break cont throw))
+      ((eq? (operator expr) 'try) (catchEval expr state return break cont throw (tryEval expr state return break cont throw)))
+      ((eq? (operator expr) 'throw) (throwEval expr state throw))
       )))   
 ; A method to evaluate all of the boolean operations and update their states
 
@@ -182,20 +181,37 @@ Project 2
 
 (define tryEval
   (lambda (expr state return break cont throw)
-    (cond
-      ((hasCatch expr) (call/cc
-                        (lambda (catch)
-                            (runTree (cdar expr) state return break cont catch))))
-      (else (runTree (cdr expr) state return break cont throw))
-       )))
+    (call/cc
+     (lambda (catch)
+       (runTree (cadr expr) state return break cont catch))) ))
+
+(define throwEval
+  (lambda (expr state throw)
+    (throw (value (operand1 expr) state))))
+
+(define thrown?
+  (lambda (throwValue)
+    (not (list? throwValue))))
+
+(define catchStatement
+ (lambda (expr)
+   (caddr expr)))
+
+(define catchVar
+  (lambda (expr)
+    (caadr (catchStatement expr)) ))
 
 (define catchBody
- (lambda (expr)
-   (cddr (expr))))
+  (lambda (expr)
+    (caddr (catchStatement expr)) ))
+
+(define catchState
+  (lambda (var throwValue state)
+    (declareVariable var (value throwValue state) (addSubstate state))))
 
 (define catchEval
- (lambda (expr state return break cont catch)
+ (lambda (expr state return break cont throw throwValue)
    (cond
-     ((statement expr state return break cont))
-     (catch (runTree catchBody (Re)))
-     )))
+     ((not (thrown? throwValue)) throwValue) 
+     ((null? (catchStatement expr)) (error "Illegal throw"))
+     (else (runTree (catchBody expr) (catchState (catchVar expr) throwValue state) return break cont throw)) )))
