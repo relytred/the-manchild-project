@@ -66,7 +66,7 @@ Project 2
       ((eq? (operator expr) 'if) (ifEval expr state return break cont throw))
       ((eq? (operator expr) 'while) (call/cc
                                      (lambda (breakPoint)
-                                       (whileEval expr state return breakPoint cont))))
+                                       (whileEval expr state return breakPoint cont throw))))
       ((eq? (operator expr) 'break) (breakEval state break) throw)
       ((eq? (operator expr) 'continue) (continueEval state cont) throw)
       ((eq? (operator expr) 'try) (tryEval expr state return break cont throw))
