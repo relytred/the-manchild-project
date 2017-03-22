@@ -1,12 +1,12 @@
 #|
 Jeffrey Noymer & Tyler Mayle
 jan88 & tcm45
-Project 1
+Project 2
 |#
-
 
 (load "simpleParser.scm")
 (load "control.rkt")
+;(load "test.rkt")
 (require racket/trace)
 
 
@@ -38,6 +38,7 @@ Project 1
 (define operator car)
 (define operand1 cadr)
 (define operand2 caddr)
+(define operand3 cadddr)
 
 ; A function to facilitate the handling of substate blocks
 
@@ -62,11 +63,12 @@ Project 1
                                      (lambda (breakPoint)
                                        (whileEval expr state return breakPoint))))
       ((eq? (operator expr) 'break) (breakEval state break))
+      ((eq? (operator expr) 'try) (tryEval state)#|Need Text body here|#)
       )))   
 ; A method to evaluate all of the boolean operations and update their states
 
 (define boolean
-  (lambda (expr state)
+  (lambda (expr state break)
     (cond
       ((and (not (list? expr)) (eq? expr 'true)) #t)
       ((and (not (list? expr)) (eq? expr 'false)) #f)
@@ -85,7 +87,7 @@ Project 1
 ; A method to compute the value for all integer computations
 
 (define value
-  (lambda (expr state)
+  (lambda (expr state break)
     (cond
       ((number? expr) (inexact->exact expr))    ; the base case is just returns the value if it's a number
       ((and (not (list? expr)) (eq? expr 'true)) #t)
@@ -103,7 +105,7 @@ Project 1
 ;(value (cadar expr) state)
 
 (define returnHelp
-  (lambda (expr state)
+  (lambda (expr state break)
     ;(display (value (cadar expr) state))
     (cond
       ((eq? (value (operand1 expr) state) #t) 'true)
@@ -114,7 +116,7 @@ Project 1
 ; A function to evaluate the - symbol works as a negative sign and as an operator
 
 (define subEval
-  (lambda (expr state)
+  (lambda (expr state break)
     (cond
       ((null? (cddr expr)) (- 0 (value (operand1 expr) state)))
       (else (- (value (operand1 expr) state) (value (operand2 expr) state)))
@@ -139,12 +141,25 @@ Project 1
       (else state)
     )))
 
+; A function to determine whether or not a method can break
+
 (define canBreak
   (lambda (break)
     (not (eq? break "null"))))
+
+; A function to evaluate the break statement
 
 (define breakEval
   (lambda (state break)
     (cond
       ((canBreak break) (break (removeSubstate state)))
       (else (error "Illegal use of break statement")) )))
+
+; A function to evaluate try catch blocks
+
+(define tryEval
+  (lambda (state break)
+    (cond
+      ((null? operand2) ())
+      (else )
+      )))
