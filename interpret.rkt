@@ -168,6 +168,8 @@ Project 2
       ((inLoop break) (break (removeSubstate state)))
       (else (error "Illegal use of break statement")) )))
 
+; A function to handle continue statements
+
 (define continueEval
   (lambda (state cont)
     (cond
@@ -181,11 +183,15 @@ Project 2
     (not (null? (operand2 expr)))
     ))
 
+; A function to evaluate the try block
+
 (define tryEval
   (lambda (expr state return break cont throw)
     (call/cc
      (lambda (catch)
        (runTree (cadr expr) (addSubstate state) return break cont catch))) ))
+
+; A function to handle the throw event
 
 (define throwEval
   (lambda (expr state throw)
@@ -193,25 +199,37 @@ Project 2
       ((eq? throw "null") (error "Illegal throw"))
       (else (throw (cons (value (operand1 expr) state) state))) )))
 
+; A function determining whether it has been thrown
+
 (define thrown?
   (lambda (state)
     (not (list? (first state)))))
+
+; A function to get the catch statement
 
 (define catchStatement
  (lambda (expr)
    (caddr expr)))
 
+; A function to get the variable of the catch
+
 (define catchVar
   (lambda (expr)
     (caadr (catchStatement expr)) ))
+
+; A function to get the body of the catch
 
 (define catchBody
   (lambda (expr)
     (caddr (catchStatement expr)) ))
 
+; A function to handle the catch state
+
 (define catchState
   (lambda (var state)
     (declareVariable var (value (first state) (pop state)) (addSubstate (removeSubstate (pop state))))))
+
+; A function to evaluate the catch statement
 
 (define catchEval
  (lambda (expr state return break cont throw)
@@ -219,17 +237,25 @@ Project 2
      ((not (thrown? state)) state)
      (else (runTree (catchBody expr) (catchState (catchVar expr) state) return break cont throw)) )))
 
+; A function to get the finally statement
+
 (define finallyStatement
   (lambda (expr)
     (cadddr expr)) )
+
+; A function to handle the body of the finally statement)
 
 (define finallyBody
   (lambda (expr)
     (cadr (finallyStatement expr)) ))
 
+; A function to handle the finally state
+
 (define finallyState
   (lambda (state)
     (addSubstate (removeSubstate state)) ))
+
+; A function to evaluate finally blocks
 
 (define finallyEval
   (lambda (expr state return break cont throw)
