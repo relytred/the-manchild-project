@@ -66,8 +66,8 @@ Project 1
   (lambda (var state)
     (cond
       ((not (declared? var state)) (error "variable not declared:" var))
-      ((eq? (getMatch var state) "null") (error "variable not initialized" var))
-      (else (getMatch var state)) )))
+      ((eq? (unbox (getMatch var state)) "null") (error "variable not initialized" var))
+      (else (unbox (getMatch var state))) )))
 
 ; A function to find the matching value for the variable in a given state
 
@@ -108,10 +108,7 @@ Project 1
 (define replaceVariable
   (lambda (var value state)
     (cond
-      ((include? var (getVariables state)) (constructState
-                                            (push var (getVariables (removeMatch var (getVariables state) (getValues state))))
-                                            (push value (getValues (removeMatch var (getVariables state) (getValues state))))
-                                            state))                                            
+      ((include? var (getVariables state)) (begin (removeMatch var (getVariables state) (getValues state) value) state))                                          
       ((hasSubstate state) (constructSubstate (getVariables state) (getValues state) (getFunctions state) (replaceVariable var value (substate state))))
       (else state) )))
 
@@ -121,7 +118,7 @@ Project 1
   (lambda (var value state)
     (cond
       ((hasSubstate state) (constructSubstate (getVariables state) (getValues state) (getFunctions state) (addVariable var value (substate state))))
-      (else (constructState (push var (getVariables state)) (push value (getValues state)) state)) )))
+      (else (constructState (push var (getVariables state)) (push (box value) (getValues state)) state)) )))
 
 ;a function to create a function
 
@@ -232,9 +229,9 @@ Project 1
 ; A function to remove an element and its corresponding value from two matched lists
 
 (define removeMatch
-  (lambda (x l1 l2)
+  (lambda (x l1 l2 value)
     (cond
-      ((null? l1) '(() ()))
-      ((eq? x (first l1)) (list (pop l1) (pop l2))) 
-      (else (list (push (first l1) (first (removeMatch x (pop l1) (pop l2)))) (push (first l2) (cadr (removeMatch x (pop l1) (pop l2)))))))))
+      ((null? l1) #f)
+      ((eq? x (first l1)) (set-box! (first l2) value)) 
+      (else (removeMatch x (pop l1) (pop l2) value)) )))
          
