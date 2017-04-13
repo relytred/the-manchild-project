@@ -4,7 +4,7 @@ jan88 & tcm45
 Project 2
 |#
 
-(load "simpleParser.scm")
+(load "functionParser.scm")
 (load "control.rkt")
 ;(load "test.rkt")
 (require racket/trace)
@@ -14,9 +14,19 @@ Project 2
 
 (define interpret
   (lambda (expr)
+    (runMain (runTree (parser expr) newstate "null" "null" "null" "null") )))
+
+(define runMain
+  (lambda (state)
     (call/cc
      (lambda (return)
-       (runTree (parser expr) newstate return "null" "null" "null") ))))
+       (runTree (functionCallEval 'main '() state return "null" "null" "null") state return "null" "null" "null") ))))
+    
+(define runFunc
+  (lambda (expr state throw)
+    (call/cc
+     (lambda (return)
+       (runTree expr state return "null" "null" throw) ))))
 
 ; A method to determine whether or not the expr is the beginning of a block
 
@@ -43,6 +53,7 @@ Project 2
 (define operand1 cadr)
 (define operand2 caddr)
 (define operand3 cadddr)
+(define params cddr)
 
 ; A function to facilitate the handling of substate blocks
 
@@ -62,6 +73,8 @@ Project 2
       ((and (eq? (operator expr) 'var) (null? (cddr expr))) (declareVariable (operand1 expr) "null" state))
       ((eq? (operator expr) 'var) (declareVariable (operand1 expr) (value (operand2 expr) state) state))
       ((eq? (operator expr) '=) (assignVariable (operand1 expr) (value (operand2 expr) state) state))
+      ((eq? (operator expr) 'function) (addFunction (operand1 expr) (operand2 expr) (operand3 expr) state))
+      ((eq? (operator expr) 'funcall) (functionCallEval (operand1 expr) (params expr) state return break cont throw))
       ((eq? (operator expr) 'if) (ifEval expr state return break cont throw))
       ((eq? (operator expr) 'while) (call/cc
                                      (lambda (breakPoint)
@@ -261,4 +274,16 @@ Project 2
   (lambda (expr state return break cont throw)
     (cond
       ((null? (finallyStatement expr)) (removeSubstate state))
-      (else (removeSubstate (runTree (finallyBody expr) (finallyState state) return break cont throw))) ))) 
+      (else (removeSubstate (runTree (finallyBody expr) (finallyState state) return break cont throw))) )))
+
+(define getParamValues
+  (lambda (params state return break cont throw)
+    (cond
+      ((null? params) '())
+      ((and (list? (operand params)) (eq? (operand (operand params)) 'funcall)) (cons (statement expr state return break cont throw) (getParamValues (cdr params) state return break cont throw)))
+      (else (cons (value (operand1 params) state) (getParamValues (cdr params) state return break cont throw))) )))
+    
+(define functionCallEval
+  (lambda (name params state return break cont throw)
+    (runTree (getFunctionBody name state) (createFunctionState name (getParamValues params state return break cont throw) state) return break cont throw)))
+    

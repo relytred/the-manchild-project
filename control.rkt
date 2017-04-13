@@ -4,10 +4,9 @@ jan88 & tcm45
 Project 1
 |#
 
-(load "simpleParser.scm")
 (require racket/trace)
 ;state functions---------------------------------------------------------------
-(define newstate '(() ()))
+(define newstate '(() () ()))
 (define pop cdr)
 (define push cons)
 
@@ -23,32 +22,42 @@ Project 1
   (lambda (state)
     (cadr state)))
 
+;gets param names of a function
+(define getParamNames
+  (lambda (function)
+    (cadr function)))
+
+; A function to get the functions of a given state
+(define getFunctions
+  (lambda (state)
+    (caddr state)))
+
 ; A function to get the substate of given state
 
 (define substate
   (lambda (state)
-    (caddr state)))
+    (cadddr state)))
 
 ; A function to check if a state has a substate
 
 (define hasSubstate
   (lambda (state)
-    (eq? (length state) 3) ))
+    (eq? (length state) 4) ))
 
 ; A function to add a substate to a given state
 
 (define addSubstate
   (lambda (state)
     (cond
-      ((hasSubstate state) (constructSubstate (getVariables state) (getValues state) (addSubstate (substate state))))
-      (else (constructSubstate (getVariables state) (getValues state) newstate)) )))
+      ((hasSubstate state) (constructSubstate (getVariables state) (getValues state) (getFunctions state) (addSubstate (substate state))))
+      (else (constructSubstate (getVariables state) (getValues state) (getFunctions state) newstate)) )))
 
 ; A function to remove a substate from the given state
 
 (define removeSubstate
   (lambda (state)
     (cond
-      ((hasSubstate (substate state)) (constructSubstate (getVariables state) (getValues state) (removeSubstate (substate state))))
+      ((hasSubstate (substate state)) (constructSubstate (getVariables state) (getValues state) (getFunctions state) (removeSubstate (substate state))))
       (else (removeLast state)) )))
 
 ; A function to get the value of a given state
@@ -103,7 +112,7 @@ Project 1
                                             (push var (getVariables (removeMatch var (getVariables state) (getValues state))))
                                             (push value (getValues (removeMatch var (getVariables state) (getValues state))))
                                             state))                                            
-      ((hasSubstate state) (constructSubstate (getVariables state) (getValues state) (replaceVariable var value (substate state))))
+      ((hasSubstate state) (constructSubstate (getVariables state) (getValues state) (getFunctions state) (replaceVariable var value (substate state))))
       (else state) )))
 
 ; A function to add a variable to a state
@@ -111,22 +120,94 @@ Project 1
 (define addVariable
   (lambda (var value state)
     (cond
-      ((hasSubstate state) (constructSubstate (getVariables state) (getValues state) (addVariable var value (substate state))))
+      ((hasSubstate state) (constructSubstate (getVariables state) (getValues state) (getFunctions state) (addVariable var value (substate state))))
       (else (constructState (push var (getVariables state)) (push value (getValues state)) state)) )))
 
+;a function to create a function
+
+(define defineFunction
+  (lambda (name params body state)
+    (cond
+      ((defined? name state) (error "function already defined" name))
+      (else (addFunction name params body state)) )))
+
+;a list includes a certain function
+(define includeFunc?
+ (lambda (name l)
+   (cond
+     ((null? l) #f)
+     ((eq? name (car (car l))) #t)
+     (else (includeFunc? name (cdr l))) )))
+
+;is a function defined?
+
+(define defined?
+  (lambda (name state)
+    (cond
+      ((includeFunc? name (getFunctions state)) #t)
+      ((hasSubstate state) (defined? name (substate state)))
+      (else #f) )))
+    
+;add function to state
+(define addFunction
+  (lambda (name params body state)
+    (cond
+      ((hasSubstate state) (constructSubstate (getVariables state) (getValues state) (getFunctions state) (addFunction name params body (substate state))))
+      (else (constructStateFunction (cons (list name params body ) (getFunctions state)) state)) )))
+
+(define getFunc
+  (lambda (name l)
+    (cond
+      ((eq? name (car (car l))) (car l))
+      (else (getFunc name (cdr l))) )))
+
+(define getFunction
+  (lambda (name state)
+    (cond
+      ((includeFunc? name (getFunctions state)) (getFunc name (getFunctions state)) )
+      (else (getFunction name (substate state))) )))
+
+(define addParams
+  (lambda (paramNames paramValues state)
+    (cond
+      ((not (eq? (length paramNames) (length paramValues))) (error "Mismatched parameters and arguments, Expected:" (length paramNames) "not" (length paramValues)))
+      ((null? paramNames) state)
+      (else (declareVariable (car paramNames) (car paramValues) state)) )))
+
+(define getFunctionBody
+  (lambda (name state)
+    (caddr (getFunction name state)) ))
+
+(define getFunctionParams
+  (lambda (name state)
+    (cadr (getFunction name state)) ))
+
+(define removeFunctionState
+  (lambda (name state)
+    (cond
+      ((eq? (length state) 1) state)
+      ((includeFunc? name (getFunctions state)) state)
+      (else (removeFunctionState name (cdr state))) )))   
+  
+(define createFunctionState
+  (lambda (functionName params state)
+    (addParams (getFunctionParams functionName state) params (addSubstate (removeFunctionState functionName state))) ))
+    
 ; A function to construct a state
 
 (define constructState
   (lambda (vars values state)
-    (cond
-      ((hasSubstate state) (list vars values (substate state)))
-      (else (list vars values)) )))
+    (append (list vars values) (cddr state))))
 
 ; A function to construct a substate
 
 (define constructSubstate
-  (lambda (variables values subState)
-    (append (list variables values subState))))
+  (lambda (variables values functions subState)
+    (append (list variables values functions subState))))
+
+(define constructStateFunction
+  (lambda (functions state)
+    (append (list (getVariables state) (getValues state) functions) (cdddr state))))
 
 
 ;utility functions------------------------------------------------------------------
