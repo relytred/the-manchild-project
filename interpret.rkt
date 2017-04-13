@@ -69,10 +69,10 @@ Project 2
 (define statement
   (lambda (expr state return break cont throw)
     (cond
-      ((eq? (operator expr) 'return) (return (returnHelp expr state)))
+      ((eq? (operator expr) 'return) (return (returnHelp expr state return break cont throw)))
       ((and (eq? (operator expr) 'var) (null? (cddr expr))) (declareVariable (operand1 expr) "null" state))
-      ((eq? (operator expr) 'var) (declareVariable (operand1 expr) (value (operand2 expr) state) state))
-      ((eq? (operator expr) '=) (assignVariable (operand1 expr) (value (operand2 expr) state) state))
+      ((eq? (operator expr) 'var) (declareVariable (operand1 expr) (value (operand2 expr) state return break cont throw) state))
+      ((eq? (operator expr) '=) (assignVariable (operand1 expr) (value (operand2 expr) state return break cont throw) state))
       ((eq? (operator expr) 'function) (addFunction (operand1 expr) (operand2 expr) (operand3 expr) state))
       ((eq? (operator expr) 'funcall) (functionCallEval (operand1 expr) (params expr) state return break cont throw))
       ((eq? (operator expr) 'if) (ifEval expr state return break cont throw))
@@ -89,65 +89,66 @@ Project 2
 ; A method to evaluate all of the boolean operations and update their states
 
 (define boolean
-  (lambda (expr state)
+  (lambda (expr state return break cont throw)
     (cond
       ((and (not (list? expr)) (eq? expr 'true)) #t)
       ((and (not (list? expr)) (eq? expr 'false)) #f)
-      ((eq? (operator expr) '&&) (and (value (operand1 expr) state) (value (operand2 expr) state)))
-      ((eq? (operator expr) '||) (or (value (operand1 expr) state) (value (operand2 expr) state)))
-      ((eq? (operator expr) '==) (eq? (value (operand1 expr) state) (value (operand2 expr) state)))
-      ((eq? (operator expr) '!=) (not (eq? (value (operand1 expr) state) (value (operand2 expr) state))))
-      ((eq? (operator expr) '<=) (<= (value (operand1 expr) state) (value (operand2 expr) state)))
-      ((eq? (operator expr) '>=) (>= (value (operand1 expr) state) (value (operand2 expr) state)))
-      ((eq? (operator expr) '>) (> (value (operand1 expr) state) (value (operand2 expr) state)))
-      ((eq? (operator expr) '<) (< (value (operand1 expr) state) (value (operand2 expr) state)))
-      ((eq? (operator expr) '!) (not (value (operand1 expr) state)))
+      ((eq? (operator expr) '&&) (and (value (operand1 expr) state return break cont throw) (value (operand2 expr) state return break cont throw)))
+      ((eq? (operator expr) '||) (or (value (operand1 expr) state return break cont throw) (value (operand2 expr) state return break cont throw)))
+      ((eq? (operator expr) '==) (eq? (value (operand1 expr) state return break cont throw) (value (operand2 expr) state return break cont throw)))
+      ((eq? (operator expr) '!=) (not (eq? (value (operand1 expr) state return break cont throw) (value (operand2 expr) state return break cont throw))))
+      ((eq? (operator expr) '<=) (<= (value (operand1 expr) state return break cont throw) (value (operand2 expr) state return break cont throw)))
+      ((eq? (operator expr) '>=) (>= (value (operand1 expr) state return break cont throw) (value (operand2 expr) state return break cont throw)))
+      ((eq? (operator expr) '>) (> (value (operand1 expr) state return break cont throw) (value (operand2 expr) state return break cont throw)))
+      ((eq? (operator expr) '<) (< (value (operand1 expr) state return break cont throw) (value (operand2 expr) state return break cont throw)))
+      ((eq? (operator expr) '!) (not (value (operand1 expr) state return break cont throw)))
+      ((eq? (operator expr) 'funcall) (statement expr state return break cont throw))
       
       (else (error "unknown operator:" (operator expr))) )))
       
 ; A method to compute the value for all integer computations
 
 (define value
-  (lambda (expr state)
+  (lambda (expr state return break cont throw)
     (cond
       ((number? expr) (inexact->exact expr))    ; the base case is just returns the value if it's a number
       ((and (not (list? expr)) (eq? expr 'true)) #t)
       ((and (not (list? expr)) (eq? expr 'false)) #f)
       ((not (list? expr)) (getValue expr state)) ;second base case where getting variable value
-      ((eq? (operator expr) '+) (+ (value (operand1 expr) state) (value (operand2 expr) state)))
-      ((eq? (operator expr) '-) (subEval expr state))
-      ((eq? (operator expr) '*) (* (value (operand1 expr) state) (value (operand2 expr) state)))
-      ((eq? (operator expr) '/) (quotient (value (operand1 expr) state) (value (operand2 expr) state)))
-      ((eq? (operator expr) '%) (remainder (value (operand1 expr) state) (value (operand2 expr) state)))  
-      (else (boolean expr state))
+      ((eq? (operator expr) '+) (+ (value (operand1 expr) state return break cont throw) (value (operand2 expr) state return break cont throw)))
+      ((eq? (operator expr) '-) (subEval expr state return break cont throw))
+      ((eq? (operator expr) '*) (* (value (operand1 expr) state return break cont throw) (value (operand2 expr) state return break cont throw)))
+      ((eq? (operator expr) '/) (quotient (value (operand1 expr) state return break cont throw) (value (operand2 expr) state return break cont throw)))
+      ((eq? (operator expr) '%) (remainder (value (operand1 expr) state return break cont throw) (value (operand2 expr) state return break cont throw)))  
+      (else (boolean expr state return break cont throw))
       )))
 
 ; A function assist in returning values, specifically turning #t -> true and #f -> false
 ;(value (cadar expr) state)
 
 (define returnHelp
-  (lambda (expr state)
+  (lambda (expr state return break cont throw)
     ;(display (value (cadar expr) state))
     (cond
-      ((eq? (value (operand1 expr) state) #t) 'true)
-      ((eq? (value (operand1 expr) state) #f) 'false)
-      (else (value (operand1 expr) state))
+      ((eq? (value (operand1 expr) state return break cont throw) #t) 'true)
+      ((eq? (value (operand1 expr) state return break cont throw) #f) 'false)
+      (else (value (operand1 expr) state return break cont throw))
       )))
 
 ; A function to evaluate the - symbol works as a negative sign and as an operator
 
 (define subEval
-  (lambda (expr state)
+  (lambda (expr state return break cont throw)
     (cond
-      ((null? (cddr expr)) (- 0 (value (operand1 expr) state)))
-      (else (- (value (operand1 expr) state) (value (operand2 expr) state)))
+      ((null? (cddr expr)) (- 0 (value (operand1 expr) state return break cont throw)))
+      (else (- (value (operand1 expr) state return break cont throw) (value (operand2 expr) state return break cont throw)))
       )))
 
 ; A function to evaluate the different possiblities in an if statement or if else statement
 (define ifEval
   (lambda (expr state return break cont throw)
     (cond
-      ((and (eq? (operator expr) 'if) (boolean (operand1 expr) state)) (runTree (cons (operand2 expr) '()) state return break cont throw));if succeeds
+      ((and (eq? (operator expr) 'if) (boolean (operand1 expr) state return break cont throw)) (runTree (cons (operand2 expr) '()) state return break cont throw));if succeeds
       ((not (eq? (operator expr) 'if)) (runTree (cons expr '()) state return break cont throw)); else
       ((null? (cdddr expr)) state); last if fails no else
       (else (ifEval (cadddr expr) state return break cont throw)); else if
@@ -158,7 +159,7 @@ Project 2
 (define whileEval
   (lambda (expr state return break cont throw)
     (cond
-      ((boolean (operand1 expr) state)
+      ((boolean (operand1 expr) state return break cont throw)
        (whileEval expr
                   (call/cc
                    (lambda (continue)
@@ -210,7 +211,7 @@ Project 2
   (lambda (expr state throw)
     (cond
       ((eq? throw "null") (error "Illegal throw"))
-      (else (throw (cons (value (operand1 expr) state) state))) )))
+      (else (throw (cons (value (operand1 expr) state "null" "null" "null" "null") state))) )))
 
 ; A function determining whether it has been thrown
 
@@ -240,7 +241,7 @@ Project 2
 
 (define catchState
   (lambda (var state)
-    (declareVariable var (value (first state) (pop state)) (addSubstate (removeSubstate (pop state))))))
+    (declareVariable var (value (first state) (pop state) "null" "null" "null" "null") (addSubstate (removeSubstate (pop state))))))
 
 ; A function to evaluate the catch statement
 
@@ -280,8 +281,8 @@ Project 2
   (lambda (params state return break cont throw)
     (cond
       ((null? params) '())
-      ((and (list? (operand params)) (eq? (operand (operand params)) 'funcall)) (cons (statement expr state return break cont throw) (getParamValues (cdr params) state return break cont throw)))
-      (else (cons (value (operand1 params) state) (getParamValues (cdr params) state return break cont throw))) )))
+      ((and (list? (operator params)) (eq? (operator (operator params)) 'funcall)) (cons (statement expr state return break cont throw) (getParamValues (cdr params) state return break cont throw)))
+      (else (cons (value (first params) state return break cont throw) (getParamValues (cdr params) state return break cont throw))) )))
     
 (define functionCallEval
   (lambda (name params state return break cont throw)

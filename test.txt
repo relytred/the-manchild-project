@@ -1,16 +1,12 @@
-var x = 10;
-var result = 1;
-
-try {
-  while (x < 10000) {
-    result = result - 1;
-    x = x * 10;
-
-    if (x > 1000)
-      throw x;
-  }
+function fib(a) {
+  if (a == 0)
+    return 0;
+  else if (a == 1)
+    return 1;
+  else 
+    return fib(a-1) + fib(a-2);
 }
-catch (ex) {
-  throw 1;
+
+function main() {
+  return fib(2);
 }
-return result;
