@@ -96,7 +96,7 @@ Project 1
 (define varOverwrite?
   (lambda (var state)
     (cond
-      ((hasFunc? state)  (varOverwrite? var (substate state)))
+      ((and (hasSubstate state) (hasFunc? state))  (varOverwrite? var (substate state)))
       ((include? var (getVariables state)) #t)
       ((hasSubstate state) (varOverwrite? var (substate state)))
       (else #f) )))
@@ -180,7 +180,7 @@ Project 1
     (cond
       ((not (eq? (length paramNames) (length paramValues))) (error "Mismatched parameters and arguments, Expected:" (length paramNames) "not" (length paramValues)))
       ((null? paramNames) state)
-      (else (declareVariable (car paramNames) (car paramValues) state)) )))
+      (else (addParams (cdr paramNames) (cdr paramValues) (declareVariable (car paramNames) (car paramValues) state))) )))
 
 (define getFunctionBody
   (lambda (name state)
