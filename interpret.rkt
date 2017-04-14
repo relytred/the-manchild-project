@@ -14,13 +14,13 @@ Project 2
 
 (define interpret
   (lambda (expr)
-    (runMain (runTree (parser expr) newstate "null" "null" "null" "null") )))
-
-(define runMain
-  (lambda (state)
     (call/cc
      (lambda (return)
-       (runTree (functionCallEval 'main '() state return "null" "null" "null") state return "null" "null" "null") ))))
+       (runMain (runTree (parser expr) newstate "null" "null" "null" "null") return) ))))
+
+(define runMain
+  (lambda (state return)
+       (functionCallEval 'main '() state return "null" "null" "null") ))
     
 (define runFunc
   (lambda (expr state throw)
@@ -286,5 +286,5 @@ Project 2
     
 (define functionCallEval
   (lambda (name params state return break cont throw)
-    (runTree (getFunctionBody name state) (createFunctionState name (getParamValues params state return break cont throw) state) return break cont throw)))
+    (runFunc (getFunctionBody name state) (createFunctionState name (getParamValues params state return break cont throw) state) throw)))
     

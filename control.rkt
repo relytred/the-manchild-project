@@ -32,6 +32,10 @@ Project 1
   (lambda (state)
     (caddr state)))
 
+(define hasFunc?
+  (lambda (state)
+    (> (length (getFunctions state)) 0)))
+
 ; A function to get the substate of given state
 
 (define substate
@@ -66,17 +70,19 @@ Project 1
   (lambda (var state)
     (cond
       ((not (declared? var state)) (error "variable not declared:" var))
-      ((eq? (unbox (getMatch var state)) "null") (error "variable not initialized" var))
-      (else (unbox (getMatch var state))) )))
+      ((eq? (unbox (first (getMatches var state))) "null") (error "variable not initialized" var))
+      (else (unbox (first (getMatches var state)))) )))
 
 ; A function to find the matching value for the variable in a given state
 
-(define getMatch
+(define getMatches
   (lambda (var state)
     (cond
-      ((null? (getVariables state)) (getMatch var (substate state)))
-      ((eq? var (first (getVariables state))) (first (getValues state)))
-      (else (getMatch var (constructState (pop (getVariables state)) (pop (getValues state))  state))) )))  
+      ((and (null? (getVariables state)) (hasSubstate state)) (getMatches var (substate state)))
+      ((null? (getVariables state)) '())
+      ((eq? var (first (getVariables state)))
+       (append (getMatches var (constructState (pop (getVariables state)) (pop (getValues state))  state)) (cons (first (getValues state)) '())))
+      (else (getMatches var (constructState (pop (getVariables state)) (pop (getValues state))  state))) )))  
 
 ; A fuction to determine weather or not a variable has been declared yet
 
@@ -87,12 +93,20 @@ Project 1
       ((hasSubstate state) (declared? var (substate state)))
       (else #f) )))
 
+(define varOverwrite?
+  (lambda (var state)
+    (cond
+      ((hasFunc? state)  (varOverwrite? var (substate state)))
+      ((include? var (getVariables state)) #t)
+      ((hasSubstate state) (varOverwrite? var (substate state)))
+      (else #f) )))
+
 ; A function to declare a variable and add it to a state
 
 (define declareVariable
   (lambda (var value state)
     (cond
-      ((declared? var state) (error "redifining:" var))
+      ((varOverwrite? var state) (error "redifining:" var))
       (else (addVariable var value state)))))
 
 ; A function to assign a variable a value in its state
@@ -107,10 +121,7 @@ Project 1
 
 (define replaceVariable
   (lambda (var value state)
-    (cond
-      ((include? var (getVariables state)) (begin (removeMatch var (getVariables state) (getValues state) value) state))                                          
-      ((hasSubstate state) (constructSubstate (getVariables state) (getValues state) (getFunctions state) (replaceVariable var value (substate state))))
-      (else state) )))
+    (begin (set-box! (first (getMatches var state)) value) state)))
 
 ; A function to add a variable to a state
 
@@ -179,12 +190,15 @@ Project 1
   (lambda (name state)
     (cadr (getFunction name state)) ))
 
+(define replaceSubstate
+  (lambda (state newSubstate)
+    (list (getVariables state) (getValues state) (getFunctions state) newSubstate)))
+          
 (define removeFunctionState
   (lambda (name state)
     (cond
-      ((eq? (length state) 1) state)
-      ((includeFunc? name (getFunctions state)) state)
-      (else (removeFunctionState name (cdr state))) )))   
+      ((includeFunc? name (getFunctions state)) (replaceSubstate state newstate))
+      (else (replaceSubstate state (removeFunctionState name (substate state)))) )))   
   
 (define createFunctionState
   (lambda (functionName params state)
@@ -228,10 +242,10 @@ Project 1
 
 ; A function to remove an element and its corresponding value from two matched lists
 
-(define removeMatch
+(define replaceMatch
   (lambda (x l1 l2 value)
     (cond
       ((null? l1) #f)
       ((eq? x (first l1)) (set-box! (first l2) value)) 
-      (else (removeMatch x (pop l1) (pop l2) value)) )))
+      (else (replaceMatch x (pop l1) (pop l2) value)) )))
          
