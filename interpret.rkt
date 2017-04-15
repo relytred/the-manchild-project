@@ -74,7 +74,7 @@ Project 2
       ((eq? (operator expr) 'var) (declareVariable (operand1 expr) (value (operand2 expr) state return break cont throw) state))
       ((eq? (operator expr) '=) (assignVariable (operand1 expr) (value (operand2 expr) state return break cont throw) state))
       ((eq? (operator expr) 'function) (addFunction (operand1 expr) (operand2 expr) (operand3 expr) state))
-      ((eq? (operator expr) 'funcall) (functionCallEval (operand1 expr) (params expr) state return break cont throw))
+      ((eq? (operator expr) 'funcall) (begin (functionCallEval (operand1 expr) (params expr) state return break cont throw) state))
       ((eq? (operator expr) 'if) (ifEval expr state return break cont throw))
       ((eq? (operator expr) 'while) (call/cc
                                      (lambda (breakPoint)
@@ -102,7 +102,7 @@ Project 2
       ((eq? (operator expr) '>) (> (value (operand1 expr) state return break cont throw) (value (operand2 expr) state return break cont throw)))
       ((eq? (operator expr) '<) (< (value (operand1 expr) state return break cont throw) (value (operand2 expr) state return break cont throw)))
       ((eq? (operator expr) '!) (not (value (operand1 expr) state return break cont throw)))
-      ((eq? (operator expr) 'funcall) (statement expr state return break cont throw))
+      ((eq? (operator expr) 'funcall) (functionCallEval (operand1 expr) (params expr) state return break cont throw))
       
       (else (error "unknown operator:" (operator expr))) )))
       
