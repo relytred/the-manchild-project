@@ -201,9 +201,11 @@ Project 2
 
 (define tryEval
   (lambda (expr state return break cont throw)
-    (call/cc
-     (lambda (catch)
-       (runTree (cadr expr) (addSubstate state) return break cont catch))) ))
+    (list
+     (call/cc
+      (lambda (catch)
+        (runTree (cadr expr) (addSubstate state) return break cont catch)))
+     state) ))
 
 ; A function to handle the throw event
 
@@ -211,7 +213,7 @@ Project 2
   (lambda (expr state throw)
     (cond
       ((eq? throw "null") (error "Illegal throw"))
-      (else (throw (cons (value (operand1 expr) state "null" "null" "null" "null") state))) )))
+      (else (throw (value (operand1 expr) state "null" "null" "null" "null"))) )))
 
 ; A function determining whether it has been thrown
 
@@ -240,16 +242,16 @@ Project 2
 ; A function to handle the catch state
 
 (define catchState
-  (lambda (var state)
-    (declareVariable var (value (first state) (pop state) "null" "null" "null" "null") (addSubstate (removeSubstate (pop state))))))
+  (lambda (var val state)
+    (declareVariable var (value val state "null" "null" "null" "null") (addSubstate state))))
 
 ; A function to evaluate the catch statement
 
 (define catchEval
  (lambda (expr state return break cont throw)
    (cond
-     ((not (thrown? state)) state)
-     (else (runTree (catchBody expr) (catchState (catchVar expr) state) return break cont throw)) )))
+     ((not (thrown? state)) (first state))
+     (else (runTree (catchBody expr) (catchState (catchVar expr) (first state) (operand1 state)) return break cont throw)) )))
 
 ; A function to get the finally statement
 
