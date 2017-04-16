@@ -69,7 +69,7 @@ Project 1
 (define getValue
   (lambda (var state)
     (cond
-      ((not (declared? var state)) (error "variable not declared:" var))
+      ((not (declared? var state)) (error "variable not in scope" var))
       ((eq? (unbox (first (getMatches var state))) "null") (error "variable not initialized" var))
       (else (unbox (first (getMatches var state)))) )))
 
