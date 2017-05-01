@@ -4,7 +4,7 @@ jan88 & tcm45
 Project 2
 |#
 
-(load "functionParser.scm")
+(load "classParser.scm")
 (load "control.rkt")
 ;(load "test.rkt")
 (require racket/trace)
@@ -14,9 +14,23 @@ Project 2
 
 (define interpret
   (lambda (expr)
-    (call/cc
-     (lambda (return)
-       (runMain (runTree (parser expr) newstate "null" "null" "null" "null") return) ))))
+    (initClasses (parser expr) '())))
+
+   ; (call/cc
+    ; (lambda (return)
+     ;  (runMain (runTree (parser expr) newstate "null" "null" "null" "null") return) ))))
+
+(define initClasses
+  (lambda (expr classes)
+    (cond
+      ((null? expr) classes)
+      (else (initClasses (next expr) (initClass (first expr) classes))))))
+
+(define initClass
+  (lambda (expr classes)
+    (addClass (operand1 expr) (operand2 expr) (runTree (operand3 expr) newstate "null" "null" "null" "null") classes)))
+  
+;      ((eq? (operator expr) 'class) (addClass (operand1 expr) (operand2 expr) (runTree (operand3 expr) state return break cont throw)))
 
 (define runMain
   (lambda (state return)
@@ -54,6 +68,7 @@ Project 2
 (define operand2 caddr)
 (define operand3 cadddr)
 (define params cddr)
+(define next cdr)
 
 ; A function to facilitate the handling of substate blocks
 

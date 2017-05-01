@@ -10,6 +10,10 @@ Project 1
 (define pop cdr)
 (define push cons)
 
+(define addClass
+  (lambda (name parent members classes)
+    (cons (list name parent members) classes)))
+    
 ; A fuction to get the variables of a given state
 
 (define getVariables
