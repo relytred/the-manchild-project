@@ -20,17 +20,23 @@ Project 2
        (runMain newstate (initClasses (parser expr) '()) return) ))))
      ;  (runMain (runTree (parser expr) newstate "null" "null" "null" "null") return) ))))
 
+; A function that is the first line in checking for class initialization
+
 (define initClasses
   (lambda (expr classes)
     (cond
       ((null? expr) classes)
       (else (initClasses (cdr expr) (initClass (first expr) classes))))))
 
+; A function to intialize a class
+
 (define initClass
   (lambda (expr classes)
     (addClass (operand1 expr) (parseParent (operand2 expr)) (runTree (operand3 expr) newstate '() "null" "null" "null" "null") classes)))
 
 (define classContents caddr)
+
+; A function to run the main method
 
 (define runMain
   (lambda (state classes return)
@@ -44,19 +50,25 @@ Project 2
   
 ;      ((eq? (operator expr) 'class) (addClass (operand1 expr) (operand2 expr) (runTree (operand3 expr) state return break cont throw)))
 
+; A function determing if the class has a mian method
+
 (define containMain?
   (lambda (classFuncs)
     (cond
       ((null? classFuncs) #f)
       ((eq? (operator (first classFuncs)) 'main) (first classFuncs))
       (else (containMain? (pop classFuncs))) )))
-    
+
+; A function to find the main method
+
 (define findMain
   (lambda (classes)
     (cond
       ((not (containMain? (getFunctions (classContents(first classes))))) (findMain (pop classes)))
       (else (containMain? (getFunctions (classContents(first classes))))) )))
-    
+
+; A function to run a function
+
 (define runFunc
   (lambda (expr state classes throw)
     (call/cc
