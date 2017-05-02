@@ -326,17 +326,23 @@ Project 2
       ((null? (finallyStatement expr)) (removeSubstate state))
       (else (removeSubstate (runTree (finallyBody expr) (finallyState state) classes return break cont throw))) )))
 
+; A function to get the parameter values for the function
+
 (define getParamValues
   (lambda (params state classes return break cont throw)
     (cond
       ((null? params) '())
       ((and (list? (operator params)) (eq? (operator (operator params)) 'funcall)) (cons (statement expr state classes return break cont throw) (getParamValues (cdr params) state classes return break cont throw)))
       (else (cons (value (first params) state classes return break cont throw) (getParamValues (cdr params) state classes return break cont throw))) )))
-    
+
+; A function to evaluate the value of a fuction
+
 (define functionCallEval
   (lambda (name params state classes return break cont throw)
     (runFunc (getFunctionBody name state) (createFunctionState name (getParamValues params state classes return break cont throw) state) throw)))
-    
+
+; A function to do a new evaluation on a new class object
+
 (define newEval
   (lambda (class state return break cont throw)
     (getNewClass class (classes state))))

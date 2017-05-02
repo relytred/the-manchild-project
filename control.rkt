@@ -17,11 +17,15 @@ Project 1
   (lambda (name parent members classes)
     (cons (list name parent members) classes)))
 
+; A function to create a new class object
+
 (define getNewClass
   (lambda (className classes)
     (cond
       ((eq? className (name (first classes))) (list className (copyClassValues (getValues (caddr (name (first classes)))))))
       (else (getNewClass className (cdr classes))))))
+
+; A function to copy class values to a box
 
 (define copyClassValues
   (lambda (values)
@@ -50,6 +54,8 @@ Project 1
 (define getFunctions
   (lambda (state)
     (caddr state)))
+
+; A function detetermining whether a state has any functions
 
 (define hasFunc?
   (lambda (state)
@@ -111,6 +117,8 @@ Project 1
       ((include? var (getVariables state)) #t)
       ((hasSubstate state) (declared? var (substate state)))
       (else #f) )))
+
+; A function to overite the value of a variable
 
 (define varOverwrite?
   (lambda (var state)
@@ -182,17 +190,23 @@ Project 1
       ((hasSubstate state) (constructSubstate (getVariables state) (getValues state) (getFunctions state) (addFunction name params body (substate state))))
       (else (constructStateFunction (cons (list name params body ) (getFunctions state)) state)) )))
 
+; A function to find the functions
+
 (define getFunc
   (lambda (name l)
     (cond
       ((eq? name (car (car l))) (car l))
       (else (getFunc name (cdr l))) )))
 
+; A function to get the specific function
+
 (define getFunction
   (lambda (name state)
     (cond
       ((includeFunc? name (getFunctions state)) (getFunc name (getFunctions state)) )
       (else (getFunction name (substate state))) )))
+
+; A function to add parameters to a state
 
 (define addParams
   (lambda (paramNames paramValues state)
@@ -201,18 +215,26 @@ Project 1
       ((null? paramNames) state)
       (else (addParams (cdr paramNames) (cdr paramValues) (declareVariable (car paramNames) (car paramValues) state))) )))
 
+; A function that creates the body to a function
+
 (define getFunctionBody
   (lambda (name state)
     (caddr (getFunction name state)) ))
+
+; A function to get the parameters for a function
 
 (define getFunctionParams
   (lambda (name state)
     (cadr (getFunction name state)) ))
 
+; A function that has one substarte take the place of another
+
 (define replaceSubstate
   (lambda (state newSubstate)
     (list (getVariables state) (getValues state) (getFunctions state) newSubstate)))
-          
+
+; A function that removes the state the function was solved in
+
 (define removeFunctionState
   (lambda (name state)
     (cond
@@ -234,6 +256,8 @@ Project 1
 (define constructSubstate
   (lambda (variables values functions subState)
     (append (list variables values functions subState))))
+
+; A function to construct the state
 
 (define constructStateFunction
   (lambda (functions state)
