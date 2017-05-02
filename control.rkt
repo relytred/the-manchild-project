@@ -16,18 +16,6 @@ Project 1
 (define addClass
   (lambda (name parent members classes)
     (cons (list name parent members) classes)))
-
-(define getNewClass
-  (lambda (className classes)
-    (cond
-      ((eq? className (name (first classes))) (list className (copyClassValues (getValues (caddr (name (first classes)))))))
-      (else (getNewClass className (cdr classes))))))
-
-(define copyClassValues
-  (lambda (values)
-    (cond
-      ((null? values) '())
-      (else (cons (box (unbox (first values))) (copyClassValues (pop values)))))))
     
 ; A fuction to get the variables of a given state
 

@@ -154,7 +154,8 @@ Project 2
       ((eq? (operator expr) '*) (* (value (operand1 expr) state classes return break cont throw) (value (operand2 expr) state classes return break cont throw)))
       ((eq? (operator expr) '/) (quotient (value (operand1 expr) state classes return break cont throw) (value (operand2 expr) state classes return break cont throw)))
       ((eq? (operator expr) '%) (remainder (value (operand1 expr) state classes return break cont throw) (value (operand2 expr) state classes return break cont throw)))
-      ((eq? (operator expr) 'new) (newEval (operand1 expr) state classes return break cont throw))
+      ((eq? (operator expr) 'new) (newEval (operand1 expr) classes))
+      ((eq? (operator expr) 'dot) (dotEval (value (operand1 expr) state classes return break cont throw) (operand2 expr) state classes))
       (else (boolean expr state classes return break cont throw))
       )))
 
@@ -326,10 +327,33 @@ Project 2
     (runFunc (getFunctionBody name state) (createFunctionState name (getParamValues params state classes return break cont throw) state) throw)))
     
 (define newEval
-  (lambda (class state return break cont throw)
-    (getNewClass class (classes state))))
+  (lambda (className classes)
+    (cond
+      ((eq? className (name (first classes))) (list className (copyClassValues (getValues (classContents (first classes))))))
+      (else (newEval className (cdr classes))))))
 
+(define getNewClass
+  (lambda (className classes)
+    (cond
+      ((eq? className (name (first classes))) (list className (copyClassValues (getValues (classContents (name (first classes))))) ))
+      (else (getNewClass className (cdr classes))) )))
 
+(define copyClassValues
+  (lambda (values)
+    (cond
+      ((null? values) '())
+      (else (cons (box (unbox (first values))) (copyClassValues (pop values)))))))
+
+(define getClassVars
+  (lambda (className classes)
+    (cond
+      ((eq? className (name (first classes))) (getVariables (classContents (first classes))))
+      (else (getClassVars className (cdr classes))) )))
+
+(define dotEval
+  (lambda (object var state classes)
+    (getValue var (list (getClassVars (name object) classes) (operand1 object)))))
+      
 ;Class functions...
 (define getState cadr)
 
