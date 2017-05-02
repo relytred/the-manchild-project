@@ -20,17 +20,23 @@ Project 2
        (runMain newstate (initClasses (parser expr) '()) return) ))))
      ;  (runMain (runTree (parser expr) newstate "null" "null" "null" "null") return) ))))
 
+; A function that is the first line in checking for class initialization
+
 (define initClasses
   (lambda (expr classes)
     (cond
       ((null? expr) classes)
       (else (initClasses (cdr expr) (initClass (first expr) classes))))))
 
+; A function to intialize a class
+
 (define initClass
   (lambda (expr classes)
     (addClass (operand1 expr) (parseParent (operand2 expr)) (runTree (operand3 expr) newstate '() "null" "null" "null" "null") classes)))
 
 (define classContents caddr)
+
+; A function to run the main method
 
 (define runMain
   (lambda (state classes return)
@@ -44,19 +50,25 @@ Project 2
   
 ;      ((eq? (operator expr) 'class) (addClass (operand1 expr) (operand2 expr) (runTree (operand3 expr) state return break cont throw)))
 
+; A function determing if the class has a mian method
+
 (define containMain?
   (lambda (classFuncs)
     (cond
       ((null? classFuncs) #f)
       ((eq? (operator (first classFuncs)) 'main) (first classFuncs))
       (else (containMain? (pop classFuncs))) )))
-    
+
+; A function to find the main method
+
 (define findMain
   (lambda (classes)
     (cond
       ((not (containMain? (getFunctions (classContents(first classes))))) (findMain (pop classes)))
       (else (containMain? (getFunctions (classContents(first classes))))) )))
-    
+
+; A function to run a function
+
 (define runFunc
   (lambda (expr state classes throw)
     (call/cc
@@ -315,29 +327,37 @@ Project 2
       ((null? (finallyStatement expr)) (removeSubstate state))
       (else (removeSubstate (runTree (finallyBody expr) (finallyState state) classes return break cont throw))) )))
 
+; A function to get the parameter values for the function
+
 (define getParamValues
   (lambda (params state classes return break cont throw)
     (cond
       ((null? params) '())
       ((and (list? (operator params)) (eq? (operator (operator params)) 'funcall)) (cons (statement expr state classes return break cont throw) (getParamValues (cdr params) state classes return break cont throw)))
       (else (cons (value (first params) state classes return break cont throw) (getParamValues (cdr params) state classes return break cont throw))) )))
-    
+
+; A function to evaluate the value of a fuction
+
 (define functionCallEval
   (lambda (name params state classes return break cont throw)
     (runFunc (getFunctionBody name state) (createFunctionState name (getParamValues params state classes return break cont throw) state) throw)))
-    
+
+; A function to do a new evaluation on a new class object
+
 (define newEval
   (lambda (className classes)
     (cond
       ((eq? className (name (first classes))) (list className (copyClassValues (getValues (classContents (first classes))))))
       (else (newEval className (cdr classes))))))
 
+; A function to create a new class object
 (define getNewClass
   (lambda (className classes)
     (cond
       ((eq? className (name (first classes))) (list className (copyClassValues (getValues (classContents (name (first classes))))) ))
       (else (getNewClass className (cdr classes))) )))
 
+; A function to copy class values to a box
 (define copyClassValues
   (lambda (values)
     (cond

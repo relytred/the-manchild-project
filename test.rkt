@@ -107,8 +107,8 @@ Project 4
 ; A function to run all of the test suites
 
 (define runTests
-  (print (and (runTest1 1 expectedValues1)
-              (runTest2 1 expectedValues2)
+  (print (and ;(runTest1 1 expectedValues1)
+              ;(runTest2 1 expectedValues2)
               ;(runTest3 1 expectedValues3)
-              ;(runTest4 1 expectedValue4)
+              (runTest4 1 expectedValues4)
               )))
