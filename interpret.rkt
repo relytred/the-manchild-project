@@ -16,6 +16,7 @@ Project 2
   (lambda (expr)
     (call/cc
      (lambda (return)
+       ;(initClasses (parser expr) '())))))
        (runMain newstate (initClasses (parser expr) '()) return) ))))
      ;  (runMain (runTree (parser expr) newstate "null" "null" "null" "null") return) ))))
 
@@ -23,16 +24,17 @@ Project 2
   (lambda (expr classes)
     (cond
       ((null? expr) classes)
-      (else (initClasses (next expr) (initClass (first expr) classes))))))
+      (else (initClasses (cdr expr) (initClass (first expr) classes))))))
 
 (define initClass
   (lambda (expr classes)
     (addClass (operand1 expr) (parseParent (operand2 expr)) (runTree (operand3 expr) newstate '() "null" "null" "null" "null") classes)))
 
+(define classContents caddr)
+
 (define runMain
-  (lambda (state classes return func)
-    (runFunc (getFunctionBody name state) (createFunctionState name (getParamValues params state classes return break cont throw) state))
-       (functionCallEval 'main '() state return "null" "null" "null") ))
+  (lambda (state classes return)
+    (runFunc (getFunctions (findMain classes)) newstate classes "null")))
 
 (define parseParent
   (lambda (expr)
@@ -46,10 +48,8 @@ Project 2
   (lambda (classFuncs)
     (cond
       ((null? classFuncs) #f)
-      ((eq? (operator (first classFuncs)) 'main) (first classFunc))
-      (else (containMain (pop classFuncs))) )))
-
-(define classContents caddr) 
+      ((eq? (operator (first classFuncs)) 'main) (first classFuncs))
+      (else (containMain? (pop classFuncs))) )))
     
 (define findMain
   (lambda (classes)
@@ -89,8 +89,6 @@ Project 2
 (define operand2 caddr)
 (define operand3 cadddr)
 (define params cddr)
-(define next cdr)
-
 ; A function to facilitate the handling of substate blocks
 
 (define block
